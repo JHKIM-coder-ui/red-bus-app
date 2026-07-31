@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo } from "react";
 
 /*
   충북혁신도시 순환버스 (빨간 노선) 안내
@@ -202,8 +202,10 @@ export default function App() {
           })}
         </div>
 
-        <footer style={S.foot}>
+         <footer style={S.foot}>
           빨간(하행) 시간표 기준 · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
+          <br />
+          문의: <a href="mailto:subarasi@kca.go.kr" style={S.mail}>JH K (subarasi@kca.go.kr)</a>
         </footer>
       </div>
     </div>
@@ -268,5 +270,6 @@ const styles = {
   arrow: { fontSize: 14, color: "#8a83a8" },
   arr: { fontSize: 22, fontWeight: 700, color: "#413a63", letterSpacing: "-0.01em" },
   stops: { fontSize: 13, color: "#5c5480", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.6 },
+  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.8 },
+  mail: { color: "#4a4370", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(74,67,112,0.35)" },
 };
