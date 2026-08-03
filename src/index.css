@@ -4,3 +4,40 @@ body {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* 노치/홈바 안전영역 대응 (아이폰 등) */
+.page {
+  padding-top: max(28px, env(safe-area-inset-top)) !important;
+  padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
+  padding-left: max(14px, env(safe-area-inset-left)) !important;
+  padding-right: max(14px, env(safe-area-inset-right)) !important;
+}
+
+/* 작은 폰 (아이폰 SE 등 좁은 화면): 여백/폭을 줄여 답답함 완화 */
+@media (max-width: 380px) {
+  .page {
+    padding-top: max(16px, env(safe-area-inset-top)) !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .timeSel {
+    width: 66px !important;
+    font-size: 18px !important;
+  }
+}
+
+/* 큰 화면 (태블릿/PC): 카드가 너무 위에 붙지 않게 세로 여백을 넉넉히 */
+@media (min-width: 700px) {
+  .page {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 56px !important;
+  }
+  .card { width: 100%; }
+}
+
+/* 가로 모드 등 낮고 넓은 화면: 상단 여백 축소 */
+@media (min-width: 700px) and (max-height: 560px) {
+  .page { padding-top: 24px !important; }
+}

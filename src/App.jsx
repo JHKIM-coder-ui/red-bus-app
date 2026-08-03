@@ -92,6 +92,7 @@ export default function App() {
   const [dest, setDest] = useState("");
   const [afterH, setAfterH] = useState(""); // 시 (24시간)
   const [afterM, setAfterM] = useState(""); // 분
+  const [selected, setSelected] = useState(null); // 상세 뷰용 선택 결과
 
   // 시각 필터 값 (시만 선택해도 동작, 둘 다 비면 필터 없음)
   const after = afterH === "" ? "" : `${afterH}:${afterM === "" ? "00" : afterM}`;
@@ -135,12 +136,15 @@ export default function App() {
         di = stops.findIndex((s, i) => i > oi && s.replace("(도착)", "") === dest);
         if (di < 0) return; // 이 노선으론 못 감
       }
-      sched.forEach((row) => {
+      sched.forEach((row, rowIdx) => {
         const depT = row[oi];
         if (!depT) return;
         if (after && toMin(depT) < toMin(after)) return;
         out.push({
           line,
+          rowIdx,
+          oi,
+          di,
           dep: depT,
           depMin: toMin(depT),
           arr: di >= 0 ? row[di] : null,
@@ -153,11 +157,11 @@ export default function App() {
 
   const S = styles;
   return (
-    <div style={S.page}>
+    <div className="page" style={S.page}>
       <div style={S.blobA} />
       <div style={S.blobB} />
       <div style={S.blobC} />
-      <div style={S.card}>
+      <div className="card" style={S.card}>
         <header style={S.header}>
           <h1 style={S.title}>충북혁도 빨간버스 시간표</h1>
           <p style={S.sub}>1000번 / 2000번</p>
@@ -186,14 +190,14 @@ export default function App() {
               <button style={S.miniBtn} onClick={setNow}>지금</button>
             </div>
             <div style={S.timeRow}>
-              <select style={{ ...S.input, ...S.timeSel }} value={afterH} onChange={(e) => setAfterH(e.target.value)}>
+              <select className="timeSel" style={{ ...S.input, ...S.timeSel }} value={afterH} onChange={(e) => setAfterH(e.target.value)}>
                 <option value="">시</option>
                 {Array.from({ length: 17 }, (_, i) => i + 6).map((h) => (
                   <option key={h} value={h}>{String(h).padStart(2, "0")}</option>
                 ))}
               </select>
               <span style={S.colon}>:</span>
-              <select style={{ ...S.input, ...S.timeSel }} value={afterM} onChange={(e) => setAfterM(e.target.value)} disabled={afterH === ""}>
+              <select className="timeSel" style={{ ...S.input, ...S.timeSel }} value={afterM} onChange={(e) => setAfterM(e.target.value)} disabled={afterH === ""}>
                 <option value="">분</option>
                 {[...new Set(["00", "10", "20", "30", "40", "50", afterM].filter(Boolean))]
                   .sort((a, b) => Number(a) - Number(b))
@@ -216,7 +220,7 @@ export default function App() {
           {results.map((r, i) => {
             const m = LINE_META[r.line];
             return (
-              <div key={i} style={S.row}>
+              <div key={i} style={S.row} onClick={() => setSelected(r)} role="button" tabIndex={0}>
                 <div style={S.rowLeft}>
                   <span style={{ ...S.dot, background: m.color }} />
                   <span style={S.rowNum}>{m.num}번</span>
@@ -229,6 +233,7 @@ export default function App() {
                   </div>
                   <div style={S.stops}>{origin} → {r.destName}</div>
                 </div>
+                <span style={S.chevron}>›</span>
               </div>
             );
           })}
@@ -239,6 +244,66 @@ export default function App() {
         <footer style={S.foot}>
           빨간(하행) 시간표 기준 · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
         </footer>
+      </div>
+
+      {selected && (
+        <DetailView result={selected} onClose={() => setSelected(null)} />
+      )}
+    </div>
+  );
+}
+
+// ── 상세 노선/시각 뷰 ─────────────────────────────
+function DetailView({ result, onClose }) {
+  const m = LINE_META[result.line];
+  const stops = STOPS[result.line];
+  const row = SCHEDULES[result.line][result.rowIdx];
+  const D = detailStyles;
+
+  return (
+    <div style={D.overlay} onClick={onClose}>
+      <div style={D.sheet} onClick={(e) => e.stopPropagation()}>
+        <div style={D.grabber} />
+        <div style={D.head}>
+          <div style={D.headLeft}>
+            <span style={{ ...D.dot, background: m.color }} />
+            <span style={D.headNum}>{m.num}번</span>
+            <span style={D.headTime}>{result.dep} 출발</span>
+          </div>
+          <button style={D.close} onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+
+        <div style={D.timeline}>
+          {stops.map((name, idx) => {
+            const t = row[idx];
+            const inRange = idx >= result.oi && (result.di < 0 || idx <= result.di);
+            const isOrigin = idx === result.oi;
+            const isDest = idx === result.di;
+            const label = name.replace("(도착)", "");
+            return (
+              <div key={idx} style={D.stopRow}>
+                <div style={D.timeCol}>{t}</div>
+                <div style={D.lineCol}>
+                  <span style={{
+                    ...D.node,
+                    ...(inRange ? { borderColor: m.color } : {}),
+                    ...(isOrigin || isDest ? { background: m.color, borderColor: m.color } : {}),
+                  }} />
+                  {idx < stops.length - 1 && (
+                    <span style={{ ...D.bar, ...(inRange && idx >= result.oi && (result.di < 0 || idx < result.di) ? { background: m.color } : {}) }} />
+                  )}
+                </div>
+                <div style={{ ...D.stopName, ...(inRange ? D.stopNameActive : {}) }}>
+                  {label}
+                  {isOrigin && <span style={{ ...D.tag, background: m.color }}>승차</span>}
+                  {isDest && <span style={{ ...D.tag, background: "#111" }}>하차</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={D.foot}>정류장별 시각은 예정 시각으로, 실제 운행과 다를 수 있습니다</div>
       </div>
     </div>
   );
@@ -285,13 +350,13 @@ const styles = {
   timeSel: { flex: "0 0 auto", width: 78, textAlign: "center", textAlignLast: "center", fontSize: 20, fontWeight: 700 },
   colon: { fontSize: 22, fontWeight: 500, color: "#8a83a8" },
   resultHead: { padding: "24px 26px 10px", fontSize: 12, fontWeight: 600, color: "#5c5480", letterSpacing: "0.06em", textTransform: "uppercase" },
-  list: { display: "flex", flexDirection: "column", gap: 10, padding: "0 18px 8px", maxHeight: 380, overflowY: "auto" },
+  list: { display: "flex", flexDirection: "column", gap: 10, padding: "0 18px 8px", maxHeight: "min(52vh, 520px)", overflowY: "auto" },
   empty: { padding: "40px 24px", textAlign: "center", color: "#8a83a8", fontSize: 14 },
   row: {
     display: "flex", alignItems: "center", gap: 16, padding: "16px 18px",
     background: "rgba(255,255,255,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
     border: "1px solid rgba(255,255,255,0.55)", borderRadius: 18,
-    boxShadow: "0 4px 16px rgba(70,60,130,0.08)",
+    boxShadow: "0 4px 16px rgba(70,60,130,0.08)", cursor: "pointer",
   },
   rowLeft: { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 44, flexShrink: 0 },
   dot: { width: 10, height: 10, borderRadius: "50%", boxShadow: "0 0 8px rgba(0,0,0,0.15)" },
@@ -302,5 +367,40 @@ const styles = {
   arrow: { fontSize: 14, color: "#8a83a8" },
   arr: { fontSize: 22, fontWeight: 700, color: "#413a63", letterSpacing: "-0.01em" },
   stops: { fontSize: 13, color: "#5c5480", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  chevron: { fontSize: 22, color: "#b7b0cf", fontWeight: 400, flexShrink: 0, marginLeft: 2 },
   foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.6 },
+};
+
+// ── 상세 뷰 스타일 ─────────────────────────────
+const detailStyles = {
+  overlay: {
+    position: "fixed", inset: 0, zIndex: 100,
+    background: "rgba(30,24,60,0.35)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
+    display: "flex", alignItems: "flex-end", justifyContent: "center",
+  },
+  sheet: {
+    width: "100%", maxWidth: 440, maxHeight: "85vh", overflowY: "auto",
+    background: "rgba(255,255,255,0.9)", backdropFilter: "saturate(160%) blur(20px)", WebkitBackdropFilter: "saturate(160%) blur(20px)",
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    border: "1px solid rgba(255,255,255,0.7)", borderBottom: "none",
+    boxShadow: "0 -8px 40px rgba(70,60,130,0.25)",
+    padding: "10px 0 28px",
+  },
+  grabber: { width: 40, height: 5, borderRadius: 3, background: "rgba(40,32,80,0.2)", margin: "6px auto 12px" },
+  head: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px 16px", borderBottom: "1px solid rgba(40,32,80,0.08)" },
+  headLeft: { display: "flex", alignItems: "center", gap: 8 },
+  dot: { width: 10, height: 10, borderRadius: "50%" },
+  headNum: { fontSize: 15, fontWeight: 700, color: "#211c3d" },
+  headTime: { fontSize: 14, color: "#5c5480", fontWeight: 600 },
+  close: { border: "none", background: "rgba(40,32,80,0.08)", color: "#413a63", width: 30, height: 30, borderRadius: "50%", fontSize: 14, cursor: "pointer" },
+  timeline: { padding: "16px 22px 8px" },
+  stopRow: { display: "flex", alignItems: "stretch", minHeight: 44 },
+  timeCol: { width: 52, flexShrink: 0, fontSize: 13, fontWeight: 600, color: "#5c5480", paddingTop: 1 },
+  lineCol: { width: 24, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" },
+  node: { width: 13, height: 13, borderRadius: "50%", background: "#fff", border: "2.5px solid #cfc9e0", flexShrink: 0, zIndex: 1 },
+  bar: { width: 2.5, flex: 1, background: "#e2ddef", margin: "1px 0" },
+  stopName: { flex: 1, fontSize: 15, color: "#8a83a8", paddingBottom: 14, display: "flex", alignItems: "center", gap: 8, lineHeight: 1.2 },
+  stopNameActive: { color: "#211c3d", fontWeight: 700 },
+  tag: { fontSize: 11, fontWeight: 700, color: "#fff", padding: "2px 8px", borderRadius: 999, flexShrink: 0 },
+  foot: { padding: "8px 22px 0", fontSize: 11, color: "#9a93b8", lineHeight: 1.5 },
 };
