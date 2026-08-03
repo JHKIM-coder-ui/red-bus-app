@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 
 /*
   충북혁신도시 순환버스 (빨간 노선) 안내
@@ -24,8 +24,10 @@ const STOPS = {
 };
 
 // ── 시간표: 각 배열 = 한 회차, 정류장 순서대로 시각(문자열) ──
-// 순환1번 (1000번) 빨간 시간표
+// 순환1번 (1000번) — 초록(이른 아침 첫차) + 빨강 시간표 통합
 const SCHEDULE_1000 = [
+  ["7:05","7:06","7:07","7:08","7:09","7:10","7:12","7:16","7:18","7:20","7:22","7:23","7:24","7:25","7:26","7:27","7:28","7:29","7:30","7:30"],
+  ["7:30","7:32","7:38","7:44","7:46","7:48","7:50","7:54","7:56","7:58","8:00","8:03","8:05","8:07","8:09","8:11","8:12","8:13","8:14","8:14"],
   ["8:20","8:24","8:26","8:30","8:32","8:34","8:36","8:40","8:42","8:44","8:45","8:46","8:47","8:49","8:51","8:53","8:54","8:57","9:01","9:04"],
   ["9:30","9:34","9:36","9:40","9:42","9:44","9:46","9:50","9:52","9:54","9:55","9:56","9:57","9:59","10:01","10:03","10:04","10:07","10:11","10:14"],
   ["10:40","10:44","10:46","10:50","10:52","10:54","10:56","11:00","11:02","11:04","11:05","11:06","11:07","11:09","11:11","11:13","11:14","11:17","11:21","11:24"],
@@ -54,6 +56,36 @@ const LINE_META = {
 };
 
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+// ── 애드센스 광고 컴포넌트 ─────────────────────────────
+// client: 본인 게시자 ID (ca-pub-...), slot: 광고 단위 슬롯 ID
+const ADS_CLIENT = "ca-pub-6686343538244363"; // ← 본인 게시자 ID로 교체
+const ADS_SLOT = "XXXXXXXXXX";                // ← 광고 단위 슬롯 ID로 교체
+
+function AdBox() {
+  const ref = useRef(null);
+  const pushed = useRef(false);
+  useEffect(() => {
+    if (pushed.current) return;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      pushed.current = true;
+    } catch (e) { /* 개발 중 or 미승인 시 무시 */ }
+  }, []);
+  return (
+    <div style={{ padding: "0 18px 8px" }}>
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block", textAlign: "center" }}
+        data-ad-client={ADS_CLIENT}
+        data-ad-slot={ADS_SLOT}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+        ref={ref}
+      />
+    </div>
+  );
+}
 
 export default function App() {
   const [origin, setOrigin] = useState("");
@@ -202,10 +234,10 @@ export default function App() {
           })}
         </div>
 
-         <footer style={S.foot}>
+        <AdBox />
+
+        <footer style={S.foot}>
           빨간(하행) 시간표 기준 · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
-          <br />
-          문의: <a href="mailto:subarasi@kca.go.kr" style={S.mail}>JH K (subarasi@kca.go.kr)</a>
         </footer>
       </div>
     </div>
@@ -270,6 +302,5 @@ const styles = {
   arrow: { fontSize: 14, color: "#8a83a8" },
   arr: { fontSize: 22, fontWeight: 700, color: "#413a63", letterSpacing: "-0.01em" },
   stops: { fontSize: 13, color: "#5c5480", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.8 },
-  mail: { color: "#4a4370", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(74,67,112,0.35)" },
+  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.6 },
 };
