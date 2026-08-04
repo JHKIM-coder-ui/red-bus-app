@@ -102,7 +102,7 @@ const GROUPS = {
   red: { label: "빨간버스", lines: ["1000", "2000"] },
   shucle: { label: "모두타유", lines: ["SHUCLE_A1", "SHUCLE_A2"] },
   intercity: { label: "시외버스", type: "dest" },
-  local: { label: "시내버스", type: "dest" },
+  local: { label: "시내버스", type: "dest", hidden: true }, // 운행 확정 시 hidden 제거
 };
 
 // ── 시외버스: 충북혁신도시터미널 출발 ──
@@ -343,7 +343,7 @@ export default function App() {
         </header>
 
         <div style={S.tabs}>
-          {Object.entries(GROUPS).map(([key, g]) => (
+          {Object.entries(GROUPS).filter(([, g]) => !g.hidden).map(([key, g]) => (
             <button
               key={key}
               onClick={() => changeTab(key)}
