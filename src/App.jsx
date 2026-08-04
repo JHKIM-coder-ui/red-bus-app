@@ -101,7 +101,71 @@ const LINE_META = {
 const GROUPS = {
   red: { label: "빨간버스", lines: ["1000", "2000"] },
   shucle: { label: "모두타유", lines: ["SHUCLE_A1", "SHUCLE_A2"] },
+  intercity: { label: "시외버스", type: "dest" },
+  local: { label: "시내버스", type: "dest" },
 };
+
+// ── 시외버스: 충북혁신도시터미널 출발 ──
+// 각 편: { t: 시각, via: 경유표기(없으면 직통), days: 운행요일(생략 시 매일) }
+// days 코드: 0=일 1=월 2=화 3=수 4=목 5=금 6=토
+const INTERCITY = {
+  "서울남부(서초)": [
+    { t: "6:20" }, { t: "7:00" }, { t: "7:40" }, { t: "8:20", via: "대소" },
+    { t: "9:00", via: "대소" }, { t: "9:10", via: "대소", days: [5,6,0] }, { t: "9:30" },
+    { t: "9:40", via: "대소", days: [6] }, { t: "10:00", via: "대소" },
+    { t: "10:20", via: "대소", days: [6] }, { t: "10:30" }, { t: "10:50", via: "대소", days: [6] },
+    { t: "11:00", via: "대소" }, { t: "11:20", via: "대소", days: [6] }, { t: "12:00", via: "대소" },
+    { t: "12:30" }, { t: "13:00", via: "대소" }, { t: "14:00", via: "대소" }, { t: "14:30" },
+    { t: "15:00", via: "대소" }, { t: "15:40", via: "대소", days: [5,6,0] }, { t: "16:00", via: "대소·죽전" },
+    { t: "16:20", via: "대소", days: [6] }, { t: "16:30" }, { t: "17:00", via: "대소" },
+    { t: "17:30" }, { t: "17:50", via: "대소", days: [6] }, { t: "18:00", via: "대소·죽전" },
+    { t: "18:30" }, { t: "19:00", via: "대소" }, { t: "20:00" }, { t: "21:00" },
+  ],
+  "동서울 (덕산·대소)": [
+    { t: "7:35" }, { t: "10:05" }, { t: "12:35" }, { t: "16:05" }, { t: "18:35" },
+  ],
+  "수원·안산 (대소경유)": [
+    { t: "7:55", via: "대소·로데오" }, { t: "14:55", via: "대소·공포" },
+  ],
+  "김포·인천공항": [
+    { t: "8:20" }, { t: "13:30" }, { t: "19:00" },
+  ],
+  "대전복합 (진천경유)": [
+    { t: "7:10" }, { t: "9:00" }, { t: "11:00" }, { t: "13:00" }, { t: "15:00" }, { t: "17:00" }, { t: "19:00" },
+  ],
+  "유성": [
+    { t: "6:40" }, { t: "9:30" }, { t: "12:50" }, { t: "13:50" }, { t: "16:00" }, { t: "17:50" }, { t: "18:50" }, { t: "21:00" },
+  ],
+  "청주 (진천경유)": [
+    { t: "9:15" }, { t: "13:20" }, { t: "19:20" },
+  ],
+  "충주 (무극·음성·주덕경유)": [
+    { t: "8:20" }, { t: "11:27" }, { t: "16:52" }, { t: "18:55" }, { t: "20:00", via: "음성종착" },
+  ],
+  "천안 (진천경유)": [
+    { t: "7:20" }, { t: "9:40" }, { t: "11:20" }, { t: "13:30" }, { t: "18:30" },
+  ],
+  "오송": [
+    { t: "9:00" }, { t: "18:30" },
+  ],
+};
+
+// ── 시내버스: 방면별 출발 시각 (경유/요일 구분 없음) ──
+const LOCAL = {
+  "대소↔광혜원": ["6:50","9:20","14:10","17:20"],
+  "용촌·용소": ["7:10","8:00","10:30","13:00","16:00"],
+  "통동": ["6:50","9:00","10:50","13:40","15:50","18:30","19:50"],
+  "봉곡": ["9:50"],
+  "인곡": ["6:40","18:20"],
+  "기지": ["6:50","7:10"],
+  "덕산·진천": ["6:50","7:00","7:40","8:00","8:10","8:50","9:20","9:40","10:10","10:30","11:10","11:40","13:00","13:50","14:40","15:50","17:00","18:10","19:00","19:20","20:00","20:50"],
+  "맹동·무극 (금왕)": ["6:50","7:20","8:10","9:50","10:20","11:50","12:30","13:20","14:00","14:50","16:10","17:20","18:00","19:20","20:20"],
+};
+
+const DEST_DATA = { intercity: INTERCITY, local: LOCAL };
+
+// 요일 이름 (0=일 ~ 6=토)
+const DAY_NAMES = ["일","월","화","수","목","금","토"];
 
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 
@@ -136,20 +200,23 @@ function AdBox() {
 }
 
 export default function App() {
-  const [tab, setTab] = useState("red"); // "red" | "shucle"
+  const [tab, setTab] = useState("red");
   const [origin, setOrigin] = useState("");
   const [dest, setDest] = useState("");
+  const [destName, setDestName] = useState(""); // 시외/시내버스 목적지
   const [afterH, setAfterH] = useState(""); // 시 (24시간)
   const [afterM, setAfterM] = useState(""); // 분
   const [selected, setSelected] = useState(null); // 상세 뷰용 선택 결과
 
-  // 현재 탭의 노선들
-  const tabLines = GROUPS[tab].lines;
+  const group = GROUPS[tab];
+  const isDestMode = group.type === "dest"; // 시외/시내버스 방식
+  // 현재 탭의 노선들 (순환 방식일 때만)
+  const tabLines = group.lines || [];
 
   // 탭 변경 시 검색값 초기화
   const changeTab = (t) => {
     setTab(t);
-    setOrigin(""); setDest(""); setAfterH(""); setAfterM(""); setSelected(null);
+    setOrigin(""); setDest(""); setDestName(""); setAfterH(""); setAfterM(""); setSelected(null);
   };
 
   // 시각 필터 값 (시만 선택해도 동작, 둘 다 비면 필터 없음)
@@ -215,6 +282,49 @@ export default function App() {
     return out.sort((a, b) => a.depMin - b.depMin);
   }, [ready, origin, dest, after, tabLines]);
 
+  // ── 시외/시내버스(목적지 방식) ──
+  const destList = useMemo(() => {
+    if (!isDestMode) return [];
+    return Object.keys(DEST_DATA[tab]);
+  }, [isDestMode, tab]);
+
+  // 오늘 요일 (0=일 ~ 6=토)
+  const todayDow = new Date().getDay();
+
+  // 조회 조건: 시간대 선택 시 활성 (목적지는 선택사항)
+  const destReady = isDestMode && afterH !== "";
+
+  // 모든 목적지의 출발 편을 시간순으로 합쳐 반환. 목적지 선택 시 그 목적지만.
+  const destResults = useMemo(() => {
+    if (!destReady) return [];
+    const data = DEST_DATA[tab];
+    const targets = destName ? [destName] : Object.keys(data);
+    const out = [];
+    targets.forEach((d) => {
+      (data[d] || []).forEach((item) => {
+        // 시외버스는 객체({t,via,days}), 시내버스는 문자열
+        const t = typeof item === "string" ? item : item.t;
+        const via = typeof item === "string" ? null : (item.via || null);
+        const days = typeof item === "string" ? null : (item.days || null);
+        if (after && toMin(t) < toMin(after)) return;
+        const runsToday = !days || days.includes(todayDow);
+        out.push({
+          dest: d,
+          t,
+          min: toMin(t),
+          via,
+          days,
+          runsToday,
+        });
+      });
+    });
+    // 오늘 운행 편을 먼저, 그 안에서 시간순
+    return out.sort((a, b) => {
+      if (a.runsToday !== b.runsToday) return a.runsToday ? -1 : 1;
+      return a.min - b.min;
+    });
+  }, [destReady, tab, destName, after, todayDow]);
+
   const S = styles;
   return (
     <div className="page" style={S.page}>
@@ -224,7 +334,12 @@ export default function App() {
       <div className="card" style={S.card}>
         <header style={S.header}>
           <h1 style={S.title}>충북혁도 버스 시간표</h1>
-          <p style={S.sub}>{tab === "red" ? "빨간버스 1000번 / 2000번" : "자율주행셔틀 모두타유"}</p>
+          <p style={S.sub}>{
+            tab === "red" ? "빨간버스 1000번 / 2000번"
+            : tab === "shucle" ? "자율주행셔틀 모두타유"
+            : tab === "intercity" ? "혁신도시터미널 시외버스"
+            : "혁신도시터미널 시내버스"
+          }</p>
         </header>
 
         <div style={S.tabs}>
@@ -240,21 +355,35 @@ export default function App() {
         </div>
 
         <div style={S.form}>
-          <label style={S.field}>
-            <span style={S.lbl}>출발</span>
-            <select style={S.input} value={origin} onChange={(e) => { setOrigin(e.target.value); setDest(""); }}>
-              <option value="">정류장 선택</option>
-              {allOrigins.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
+          {!isDestMode && (
+            <>
+              <label style={S.field}>
+                <span style={S.lbl}>출발</span>
+                <select style={S.input} value={origin} onChange={(e) => { setOrigin(e.target.value); setDest(""); }}>
+                  <option value="">정류장 선택</option>
+                  {allOrigins.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
 
-          <label style={S.field}>
-            <span style={S.lbl}>도착</span>
-            <select style={S.input} value={dest} onChange={(e) => setDest(e.target.value)} disabled={!origin}>
-              <option value="">정류장 선택</option>
-              {destOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
+              <label style={S.field}>
+                <span style={S.lbl}>도착</span>
+                <select style={S.input} value={dest} onChange={(e) => setDest(e.target.value)} disabled={!origin}>
+                  <option value="">정류장 선택</option>
+                  {destOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+            </>
+          )}
+
+          {isDestMode && (
+            <label style={S.field}>
+              <span style={S.lbl}>{tab === "intercity" ? "어디로 가요? (선택)" : "어느 방면? (선택)"}</span>
+              <select style={S.input} value={destName} onChange={(e) => setDestName(e.target.value)}>
+                <option value="">전체 (모든 {tab === "intercity" ? "목적지" : "방면"})</option>
+                {destList.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </label>
+          )}
 
           <div style={S.field}>
             <div style={S.timeHead}>
@@ -282,14 +411,17 @@ export default function App() {
         </div>
 
         <div style={S.resultHead}>
-          {ready ? `${results.length}대` : "출발 · 도착 · 시간을 선택하세요"}
+          {isDestMode
+            ? (destReady ? `${destResults.length}편` : "시간을 선택하세요")
+            : (ready ? `${results.length}대` : "출발 · 도착 · 시간을 선택하세요")}
         </div>
 
         <div style={S.list}>
-          {ready && results.length === 0 && (
+          {/* 순환 방식(빨간버스·모두타유) 결과 */}
+          {!isDestMode && ready && results.length === 0 && (
             <div style={S.empty}>조건에 맞는 버스가 없습니다</div>
           )}
-          {results.map((r, i) => {
+          {!isDestMode && results.map((r, i) => {
             const m = LINE_META[r.line];
             return (
               <div key={i} style={S.row} onClick={() => setSelected(r)} role="button" tabIndex={0}>
@@ -309,12 +441,42 @@ export default function App() {
               </div>
             );
           })}
+
+          {/* 목적지 방식(시외·시내버스) 편별 목록 */}
+          {isDestMode && destReady && destResults.length === 0 && (
+            <div style={S.empty}>해당 시간 이후 출발 편이 없습니다</div>
+          )}
+          {isDestMode && destReady && destResults.map((r, i) => (
+            <div key={i} style={{ ...S.row, ...(r.runsToday ? {} : S.rowDim) }}>
+              <div style={S.busTimeCol}>
+                <b style={S.dep}>{r.t}</b>
+              </div>
+              <div style={S.rowMain}>
+                <div style={S.busDest}>{r.dest}</div>
+                <div style={S.busTags}>
+                  <span style={{ ...S.viaTag, ...(r.via ? S.viaCol : S.directCol) }}>
+                    {r.via ? `${r.via} 경유` : "직통"}
+                  </span>
+                  {r.days && (
+                    <span style={{ ...S.dayTag, ...(r.runsToday ? S.dayRun : S.dayNo) }}>
+                      {r.days.map((d) => DAY_NAMES[d]).join("·")}요일 운행{r.runsToday ? "" : " (오늘 미운행)"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         <AdBox />
 
         <footer style={S.foot}>
-          {tab === "red" ? "빨간버스 시간표 기준" : "모두타유 자율주행셔틀 시간표 기준"} · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
+          {
+            tab === "red" ? "빨간버스 시간표 기준"
+            : tab === "shucle" ? "모두타유 자율주행셔틀 시간표 기준"
+            : tab === "intercity" ? "혁신도시터미널 시외버스 출발 기준"
+            : "혁신도시터미널 시내버스 출발 기준"
+          } · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
         </footer>
       </div>
 
@@ -407,13 +569,35 @@ const styles = {
     display: "flex", gap: 6, padding: "0 26px 6px",
   },
   tab: {
-    flex: 1, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer",
+    flex: 1, padding: "10px 2px", fontSize: 13, fontWeight: 700, cursor: "pointer",
     borderRadius: 12, border: "1px solid rgba(255,255,255,0.5)",
-    background: "rgba(255,255,255,0.3)", color: "#5c5480",
+    background: "rgba(255,255,255,0.3)", color: "#5c5480", whiteSpace: "nowrap",
   },
   tabActive: {
     background: "rgba(33,28,61,0.88)", color: "#fff", border: "1px solid rgba(33,28,61,0.5)",
   },
+  destBox: {
+    background: "rgba(255,255,255,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+    border: "1px solid rgba(255,255,255,0.55)", borderRadius: 18, padding: "16px 18px",
+    boxShadow: "0 4px 16px rgba(70,60,130,0.08)",
+  },
+  destTitle: { fontSize: 15, fontWeight: 700, color: "#211c3d", marginBottom: 12 },
+  chipWrap: { display: "flex", flexWrap: "wrap", gap: 8 },
+  timeChip: {
+    fontSize: 15, fontWeight: 700, color: "#211c3d",
+    background: "rgba(255,255,255,0.7)", border: "1px solid rgba(40,32,80,0.12)",
+    borderRadius: 10, padding: "8px 12px", minWidth: 56, textAlign: "center",
+  },
+  rowDim: { opacity: 0.5 },
+  busTimeCol: { width: 58, flexShrink: 0, display: "flex", alignItems: "center" },
+  busDest: { fontSize: 16, fontWeight: 700, color: "#211c3d", marginBottom: 5 },
+  busTags: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
+  viaTag: { fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 },
+  directCol: { background: "rgba(0,150,90,0.14)", color: "#0a7a4a" },
+  viaCol: { background: "rgba(70,90,200,0.13)", color: "#3a4bb0" },
+  dayTag: { fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999 },
+  dayRun: { background: "rgba(40,32,80,0.08)", color: "#5c5480" },
+  dayNo: { background: "rgba(210,60,50,0.14)", color: "#c0392b" },
   form: { padding: "0 26px", display: "flex", flexDirection: "column" },
   field: { display: "flex", flexDirection: "column", gap: 8, padding: "18px 0", borderTop: "1px solid rgba(255,255,255,0.45)" },
   lbl: { fontSize: 12, fontWeight: 600, color: "#5c5480", letterSpacing: "0.06em", textTransform: "uppercase" },
