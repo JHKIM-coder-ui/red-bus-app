@@ -93,16 +93,16 @@ const SCHEDULES = {
 const LINE_META = {
   "1000": { label: "순환1번", num: "1000", color: "#E2483D" },
   "2000": { label: "순환2번", num: "2000", color: "#2F7D4F" },
-  "SHUCLE_A1": { label: "모두타유 시계방향", num: "모두타유", color: "#00B8C4" },
-  "SHUCLE_A2": { label: "모두타유 반시계", num: "모두타유", color: "#7B4DE3" },
+  "SHUCLE_A1": { label: "모두타유 시계방향", num: "모두타유", color: "#12B5A5" },
+  "SHUCLE_A2": { label: "모두타유 반시계", num: "모두타유", color: "#0E8C9E" },
 };
 
 // ── 버스 그룹(탭) 정의 ──
 const GROUPS = {
-  red: { label: "빨간버스", lines: ["1000", "2000"] },
-  shucle: { label: "모두타유", lines: ["SHUCLE_A1", "SHUCLE_A2"] },
-  intercity: { label: "시외버스", type: "dest" },
-  local: { label: "시내버스", type: "dest", hidden: true }, // 운행 확정 시 hidden 제거
+  red: { label: "빨간버스", lines: ["1000", "2000"], color: "#E23B32", soft: "#FDECEA" },
+  shucle: { label: "모두타유", lines: ["SHUCLE_A1", "SHUCLE_A2"], color: "#12B5A5", soft: "#E6F7F5" },
+  intercity: { label: "시외버스", type: "dest", color: "#2E6BE6", soft: "#EAF1FE" },
+  local: { label: "시내버스", type: "dest", hidden: true, color: "#F0932B", soft: "#FDF1E3" }, // 운행 확정 시 hidden 제거
 };
 
 // ── 시외버스: 충북혁신도시터미널 출발 ──
@@ -210,6 +210,8 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false); // 앱 안내 모달
 
   const group = GROUPS[tab];
+  const accent = group.color || "#E23B32"; // 현재 탭 대표색
+  const accentSoft = group.soft || "#FDECEA";
   const isDestMode = group.type === "dest"; // 시외/시내버스 방식
   // 현재 탭의 노선들 (순환 방식일 때만)
   const tabLines = group.lines || [];
@@ -326,14 +328,18 @@ export default function App() {
     });
   }, [destReady, tab, destName, after, todayDow]);
 
+  const hasResults = isDestMode
+    ? (destReady && destResults.length > 0)
+    : (ready && results.length > 0);
+  const showEmpty = isDestMode
+    ? (destReady && destResults.length === 0)
+    : (ready && results.length === 0);
+
   const S = styles;
   return (
     <div className="page" style={S.page}>
-      <div style={S.blobA} />
-      <div style={S.blobB} />
-      <div style={S.blobC} />
       <div className="card" style={S.card}>
-        <header style={S.header}>
+        <header style={{ ...S.header, background: accent }}>
           <div style={S.titleRow}>
             <h1 style={S.title}>충북혁도 버스 시간표</h1>
             <button style={S.helpBtn} onClick={() => setShowHelp(true)} aria-label="앱 안내">?</button>
@@ -351,7 +357,10 @@ export default function App() {
             <button
               key={key}
               onClick={() => changeTab(key)}
-              style={{ ...S.tab, ...(tab === key ? S.tabActive : {}) }}
+              style={{
+                ...S.tab,
+                ...(tab === key ? { ...S.tabActive, background: g.color, borderColor: g.color } : {}),
+              }}
             >
               {g.label}
             </button>
@@ -381,9 +390,9 @@ export default function App() {
 
           {isDestMode && (
             <label style={S.field}>
-              <span style={S.lbl}>{tab === "intercity" ? "어디로 가요? (선택)" : "어느 방면? (선택)"}</span>
+              <span style={S.lbl}>도착</span>
               <select style={S.input} value={destName} onChange={(e) => setDestName(e.target.value)}>
-                <option value="">전체 (모든 {tab === "intercity" ? "목적지" : "방면"})</option>
+                <option value="">정류장 선택</option>
                 {destList.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </label>
@@ -391,8 +400,8 @@ export default function App() {
 
           <div style={S.field}>
             <div style={S.timeHead}>
-              <span style={S.lbl}>이후 시간</span>
-              <button style={S.miniBtn} onClick={setNow}>지금</button>
+              <span style={S.lbl}>출발 시간</span>
+              <button style={{ ...S.miniBtn, color: accent, borderColor: accent }} onClick={setNow}>지금</button>
             </div>
             <div style={S.timeRow}>
               <select className="timeSel" style={{ ...S.input, ...S.timeSel }} value={afterH} onChange={(e) => setAfterH(e.target.value)}>
@@ -414,16 +423,16 @@ export default function App() {
           </div>
         </div>
 
-        <div style={S.resultHead}>
+        <div style={{ ...S.resultHead, ...(hasResults || showEmpty ? {} : S.resultHeadEmpty) }}>
           {isDestMode
-            ? (destReady ? `${destResults.length}편` : "시간을 선택하세요")
-            : (ready ? `${results.length}대` : "출발 · 도착 · 시간을 선택하세요")}
+            ? (destReady ? `${destResults.length}편` : "")
+            : (ready ? `${results.length}대` : "")}
         </div>
 
-        <div style={S.list}>
+        <div style={{ ...S.list, ...(hasResults ? {} : S.listEmpty) }}>
           {/* 순환 방식(빨간버스·모두타유) 결과 */}
           {!isDestMode && ready && results.length === 0 && (
-            <div style={S.empty}>조건에 맞는 버스가 없습니다</div>
+            <div style={S.empty}>선택한 시간 이후 버스편이 없습니다</div>
           )}
           {!isDestMode && results.map((r, i) => {
             const m = LINE_META[r.line];
@@ -448,12 +457,12 @@ export default function App() {
 
           {/* 목적지 방식(시외·시내버스) 편별 목록 */}
           {isDestMode && destReady && destResults.length === 0 && (
-            <div style={S.empty}>해당 시간 이후 출발 편이 없습니다</div>
+            <div style={S.empty}>선택한 시간 이후 버스편이 없습니다</div>
           )}
           {isDestMode && destReady && destResults.map((r, i) => (
             <div key={i} style={{ ...S.row, ...(r.runsToday ? {} : S.rowDim) }}>
               <div style={S.busTimeCol}>
-                <b style={S.dep}>{r.t}</b>
+                <b style={{ ...S.dep, color: accent }}>{r.t}</b>
               </div>
               <div style={S.rowMain}>
                 <div style={S.busDest}>{r.dest}</div>
@@ -475,14 +484,9 @@ export default function App() {
         <AdBox />
 
         <footer style={S.foot}>
-          {
-            tab === "red" ? "빨간버스 시간표 기준"
-            : tab === "shucle" ? "모두타유 자율주행셔틀 시간표 기준"
-            : tab === "intercity" ? "혁신도시터미널 시외버스 출발 기준"
-            : "혁신도시터미널 시내버스 출발 기준"
-          } · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
+          실제운행은 도로 사정에 따라 달라질 수 있음.
           <br />
-          문의: <a href="mailto:redbus.help@gmail.com" style={S.mail}>JH K (redbus.help@gmail.com)</a>
+          문의: <a href="mailto:redbus.help@gmail.com" style={{ ...S.mail, color: accent, borderColor: accentSoft }}>JH K (redbus.help@gmail.com)</a>
         </footer>
       </div>
 
@@ -591,153 +595,141 @@ function DetailView({ result, onClose }) {
   );
 }
 
-const glass = "saturate(160%) blur(20px)";
+// ── GoBus풍 스타일: 흰 배경 + 빨간 포인트 ──
+const RED = "#E23B32";
+const RED_SOFT = "#FDECEA";
+const INK = "#1F2430";
+const SUB = "#8A90A0";
+const LINE = "#EEF0F4";
 
 const styles = {
   page: {
-    position: "relative", minHeight: "100vh", overflow: "hidden",
-    background: "linear-gradient(150deg, #cfe2ff 0%, #e7d9ff 45%, #ffe0ec 100%)",
-    padding: "28px 14px", fontFamily: "'Pretendard', -apple-system, sans-serif", color: "#1a1730",
+    position: "relative", minHeight: "100vh",
+    background: "#F5F6F8",
+    padding: "14px 12px 20px", fontFamily: "'Pretendard', -apple-system, sans-serif", color: INK,
     WebkitFontSmoothing: "antialiased", MozOsxFontSmoothing: "grayscale", textRendering: "optimizeLegibility",
   },
-  blobA: { position: "absolute", top: -80, left: -60, width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, #7ca8ff 0%, transparent 70%)", filter: "blur(30px)", opacity: 0.7, pointerEvents: "none" },
-  blobB: { position: "absolute", top: 180, right: -90, width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, #ff9ec2 0%, transparent 70%)", filter: "blur(34px)", opacity: 0.6, pointerEvents: "none" },
-  blobC: { position: "absolute", bottom: -100, left: 40, width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, #b493ff 0%, transparent 70%)", filter: "blur(34px)", opacity: 0.55, pointerEvents: "none" },
   card: {
     position: "relative", maxWidth: 440, margin: "0 auto",
-    background: "rgba(255,255,255,0.5)", backdropFilter: glass, WebkitBackdropFilter: glass,
-    border: "1px solid rgba(255,255,255,0.6)", borderRadius: 28,
-    boxShadow: "0 12px 40px rgba(70,60,130,0.18), inset 0 1px 0 rgba(255,255,255,0.7)",
-    overflow: "hidden",
+    background: "#fff", borderRadius: 24, overflow: "hidden",
+    boxShadow: "0 6px 24px rgba(20,25,40,0.06)",
   },
-  header: { padding: "32px 26px 16px" },
+  header: { padding: "22px 22px 14px", background: RED, color: "#fff" },
   titleRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  title: { margin: 0, fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "#211c3d" },
+  title: { margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff" },
   helpBtn: {
     flexShrink: 0, width: 30, height: 30, borderRadius: "50%",
-    border: "1px solid rgba(40,32,80,0.2)", background: "rgba(255,255,255,0.5)",
-    color: "#5c5480", fontSize: 16, fontWeight: 700, cursor: "pointer", lineHeight: 1,
+    border: "1px solid rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.18)",
+    color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", lineHeight: 1,
   },
-  sub: { margin: "8px 0 0", fontSize: 13, color: "#4a4370", fontWeight: 600, letterSpacing: "0.02em" },
-  tabs: {
-    display: "flex", gap: 6, padding: "0 26px 6px",
-  },
+  sub: { margin: "6px 0 0", fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: 500, letterSpacing: "0.02em" },
+
+  tabs: { display: "flex", gap: 6, padding: "12px 16px 4px", background: "#fff" },
   tab: {
     flex: 1, padding: "10px 2px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-    borderRadius: 12, border: "1px solid rgba(255,255,255,0.5)",
-    background: "rgba(255,255,255,0.3)", color: "#5c5480", whiteSpace: "nowrap",
+    borderRadius: 999, border: "1px solid " + LINE,
+    background: "#fff", color: SUB, whiteSpace: "nowrap",
   },
-  tabActive: {
-    background: "rgba(33,28,61,0.88)", color: "#fff", border: "1px solid rgba(33,28,61,0.5)",
-  },
-  destBox: {
-    background: "rgba(255,255,255,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-    border: "1px solid rgba(255,255,255,0.55)", borderRadius: 18, padding: "16px 18px",
-    boxShadow: "0 4px 16px rgba(70,60,130,0.08)",
-  },
-  destTitle: { fontSize: 15, fontWeight: 700, color: "#211c3d", marginBottom: 12 },
-  chipWrap: { display: "flex", flexWrap: "wrap", gap: 8 },
-  timeChip: {
-    fontSize: 15, fontWeight: 700, color: "#211c3d",
-    background: "rgba(255,255,255,0.7)", border: "1px solid rgba(40,32,80,0.12)",
-    borderRadius: 10, padding: "8px 12px", minWidth: 56, textAlign: "center",
-  },
-  rowDim: { opacity: 0.5 },
-  busTimeCol: { width: 58, flexShrink: 0, display: "flex", alignItems: "center" },
-  busDest: { fontSize: 16, fontWeight: 700, color: "#211c3d", marginBottom: 5 },
-  busTags: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
-  viaTag: { fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 },
-  directCol: { background: "rgba(0,150,90,0.14)", color: "#0a7a4a" },
-  viaCol: { background: "rgba(70,90,200,0.13)", color: "#3a4bb0" },
-  dayTag: { fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999 },
-  dayRun: { background: "rgba(40,32,80,0.08)", color: "#5c5480" },
-  dayNo: { background: "rgba(210,60,50,0.14)", color: "#c0392b" },
-  form: { padding: "0 26px", display: "flex", flexDirection: "column" },
-  field: { display: "flex", flexDirection: "column", gap: 8, padding: "18px 0", borderTop: "1px solid rgba(255,255,255,0.45)" },
-  lbl: { fontSize: 12, fontWeight: 600, color: "#5c5480", letterSpacing: "0.06em", textTransform: "uppercase" },
+  tabActive: { background: RED, color: "#fff", border: "1px solid " + RED },
+
+  form: { padding: "8px 22px 0", display: "flex", flexDirection: "column" },
+  field: { display: "flex", flexDirection: "column", gap: 7, padding: "12px 0", borderTop: "1px solid " + LINE },
+  lbl: { fontSize: 12, fontWeight: 700, color: SUB, letterSpacing: "0.04em" },
   input: {
-    padding: "11px 14px", fontSize: 16, fontWeight: 500, color: "#211c3d",
-    border: "1px solid rgba(255,255,255,0.55)", borderRadius: 14,
-    background: "rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-    outline: "none", WebkitAppearance: "none", cursor: "pointer",
+    padding: "12px 14px", fontSize: 16, fontWeight: 600, color: INK,
+    border: "1px solid " + LINE, borderRadius: 14,
+    background: "#FAFBFC", outline: "none", WebkitAppearance: "none", cursor: "pointer",
   },
   timeHead: { display: "flex", justifyContent: "space-between", alignItems: "center" },
   miniBtn: {
-    padding: "6px 14px", fontSize: 12, fontWeight: 600, color: "#211c3d",
-    border: "1px solid rgba(255,255,255,0.6)", borderRadius: 999,
-    background: "rgba(255,255,255,0.4)", cursor: "pointer",
+    padding: "6px 14px", fontSize: 12, fontWeight: 700, color: RED,
+    border: "1px solid " + RED, borderRadius: 999, background: "#fff", cursor: "pointer",
   },
   timeRow: { display: "flex", alignItems: "center", gap: 10 },
   timeSel: { flex: "0 0 auto", width: 78, textAlign: "center", textAlignLast: "center", fontSize: 20, fontWeight: 700 },
-  colon: { fontSize: 22, fontWeight: 500, color: "#8a83a8" },
-  resultHead: { padding: "24px 26px 10px", fontSize: 12, fontWeight: 600, color: "#5c5480", letterSpacing: "0.06em", textTransform: "uppercase" },
-  list: { display: "flex", flexDirection: "column", gap: 10, padding: "0 18px 8px", maxHeight: "min(52vh, 520px)", overflowY: "auto" },
-  empty: { padding: "40px 24px", textAlign: "center", color: "#8a83a8", fontSize: 14 },
+  colon: { fontSize: 22, fontWeight: 500, color: "#C7CCD6" },
+
+  resultHead: { padding: "18px 22px 8px", fontSize: 12, fontWeight: 700, color: SUB, letterSpacing: "0.04em" },
+  resultHeadEmpty: { padding: "4px 22px 0", height: 0, overflow: "hidden" },
+  list: { display: "flex", flexDirection: "column", gap: 10, padding: "0 16px 8px", maxHeight: "min(52vh, 520px)", overflowY: "auto" },
+  listEmpty: { maxHeight: "none", padding: "0 16px" },
+  empty: { padding: "36px 22px", textAlign: "center", color: "#B4B9C4", fontSize: 14 },
+
   row: {
-    display: "flex", alignItems: "center", gap: 16, padding: "16px 18px",
-    background: "rgba(255,255,255,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-    border: "1px solid rgba(255,255,255,0.55)", borderRadius: 18,
-    boxShadow: "0 4px 16px rgba(70,60,130,0.08)", cursor: "pointer",
+    display: "flex", alignItems: "center", gap: 14, padding: "15px 16px",
+    background: "#fff", border: "1px solid " + LINE, borderRadius: 16,
+    boxShadow: "0 2px 10px rgba(20,25,40,0.04)", cursor: "pointer",
   },
-  rowLeft: { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 44, flexShrink: 0 },
-  dot: { width: 10, height: 10, borderRadius: "50%", boxShadow: "0 0 8px rgba(0,0,0,0.15)" },
-  rowNum: { fontSize: 11, fontWeight: 700, color: "#5c5480", letterSpacing: "0.03em", whiteSpace: "nowrap" },
+  rowDim: { opacity: 0.5 },
+  rowLeft: { display: "flex", flexDirection: "column", alignItems: "center", gap: 5, width: 46, flexShrink: 0 },
+  dot: { width: 9, height: 9, borderRadius: "50%" },
+  rowNum: { fontSize: 11, fontWeight: 800, color: SUB, letterSpacing: "0.02em", whiteSpace: "nowrap" },
   rowMain: { flex: 1, minWidth: 0 },
-  timeLine: { display: "flex", alignItems: "baseline", gap: 10 },
-  dep: { fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", color: "#211c3d" },
-  arrow: { fontSize: 14, color: "#8a83a8" },
-  arr: { fontSize: 22, fontWeight: 700, color: "#413a63", letterSpacing: "-0.01em" },
-  stops: { fontSize: 13, color: "#5c5480", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  chevron: { fontSize: 22, color: "#b7b0cf", fontWeight: 400, flexShrink: 0, marginLeft: 2 },
-  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.8 },
-  mail: { color: "#4a4370", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(74,67,112,0.35)" },
+  timeLine: { display: "flex", alignItems: "baseline", gap: 9 },
+  dep: { fontSize: 21, fontWeight: 800, letterSpacing: "-0.01em", color: INK },
+  arrow: { fontSize: 14, color: "#C7CCD6" },
+  arr: { fontSize: 21, fontWeight: 800, color: SUB, letterSpacing: "-0.01em" },
+  stops: { fontSize: 13, color: SUB, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  chevron: { fontSize: 22, color: "#C7CCD6", fontWeight: 400, flexShrink: 0, marginLeft: 2 },
+
+  busTimeCol: { width: 58, flexShrink: 0, display: "flex", alignItems: "center" },
+  busDest: { fontSize: 16, fontWeight: 800, color: INK, marginBottom: 5 },
+  busTags: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
+  viaTag: { fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 },
+  directCol: { background: "#E7F6EE", color: "#188A56" },
+  viaCol: { background: "#EAF0FF", color: "#3A5BD0" },
+  dayTag: { fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999 },
+  dayRun: { background: "#F1F3F7", color: SUB },
+  dayNo: { background: RED_SOFT, color: RED },
+
+  foot: { padding: "14px 22px 20px", fontSize: 11, color: "#A6ABB8", lineHeight: 1.8, background: "#fff" },
+  mail: { color: RED, fontWeight: 700, textDecoration: "none", borderBottom: "1px solid " + RED_SOFT },
 };
 
-// ── 상세 뷰 스타일 ─────────────────────────────
+// ── 상세/안내 시트 스타일 ──
 const detailStyles = {
   overlay: {
     position: "fixed", inset: 0, zIndex: 100,
-    background: "rgba(30,24,60,0.35)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
+    background: "rgba(20,25,40,0.4)",
     display: "flex", alignItems: "flex-end", justifyContent: "center",
   },
   sheet: {
     width: "100%", maxWidth: 440, maxHeight: "85vh", overflowY: "auto",
-    background: "rgba(255,255,255,0.9)", backdropFilter: "saturate(160%) blur(20px)", WebkitBackdropFilter: "saturate(160%) blur(20px)",
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    border: "1px solid rgba(255,255,255,0.7)", borderBottom: "none",
-    boxShadow: "0 -8px 40px rgba(70,60,130,0.25)",
+    background: "#fff",
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    boxShadow: "0 -8px 40px rgba(20,25,40,0.2)",
     padding: "10px 0 28px",
   },
-  grabber: { width: 40, height: 5, borderRadius: 3, background: "rgba(40,32,80,0.2)", margin: "6px auto 12px" },
-  head: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px 16px", borderBottom: "1px solid rgba(40,32,80,0.08)" },
+  grabber: { width: 40, height: 5, borderRadius: 3, background: "#E3E6EC", margin: "6px auto 12px" },
+  head: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px 16px", borderBottom: "1px solid " + LINE },
   headLeft: { display: "flex", alignItems: "center", gap: 8 },
   dot: { width: 10, height: 10, borderRadius: "50%" },
-  headNum: { fontSize: 15, fontWeight: 700, color: "#211c3d" },
-  headTime: { fontSize: 14, color: "#5c5480", fontWeight: 600 },
-  close: { border: "none", background: "rgba(40,32,80,0.08)", color: "#413a63", width: 30, height: 30, borderRadius: "50%", fontSize: 14, cursor: "pointer" },
+  headNum: { fontSize: 15, fontWeight: 800, color: INK },
+  headTime: { fontSize: 14, color: SUB, fontWeight: 700 },
+  close: { border: "none", background: "#F1F3F7", color: INK, width: 30, height: 30, borderRadius: "50%", fontSize: 14, cursor: "pointer" },
   timeline: { padding: "16px 22px 8px" },
   stopRow: { display: "flex", alignItems: "stretch", minHeight: 44 },
-  timeCol: { width: 52, flexShrink: 0, fontSize: 13, fontWeight: 600, color: "#5c5480", paddingTop: 1 },
+  timeCol: { width: 52, flexShrink: 0, fontSize: 13, fontWeight: 700, color: SUB, paddingTop: 1 },
   lineCol: { width: 24, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" },
-  node: { width: 13, height: 13, borderRadius: "50%", background: "#fff", border: "2.5px solid #cfc9e0", flexShrink: 0, zIndex: 1 },
-  bar: { width: 2.5, flex: 1, background: "#e2ddef", margin: "1px 0" },
-  stopName: { flex: 1, fontSize: 15, color: "#8a83a8", paddingBottom: 14, display: "flex", alignItems: "center", gap: 8, lineHeight: 1.2 },
-  stopNameActive: { color: "#211c3d", fontWeight: 700 },
+  node: { width: 13, height: 13, borderRadius: "50%", background: "#fff", border: "2.5px solid #D6DAE2", flexShrink: 0, zIndex: 1 },
+  bar: { width: 2.5, flex: 1, background: "#E7EAF0", margin: "1px 0" },
+  stopName: { flex: 1, fontSize: 15, color: SUB, paddingBottom: 14, display: "flex", alignItems: "center", gap: 8, lineHeight: 1.2 },
+  stopNameActive: { color: INK, fontWeight: 800 },
   tag: { fontSize: 11, fontWeight: 700, color: "#fff", padding: "2px 8px", borderRadius: 999, flexShrink: 0 },
-  foot: { padding: "8px 22px 0", fontSize: 11, color: "#9a93b8", lineHeight: 1.5 },
+  foot: { padding: "8px 22px 0", fontSize: 11, color: "#A6ABB8", lineHeight: 1.5 },
 };
 
-// ── 앱 안내 스타일 ─────────────────────────────
+// ── 앱 안내 스타일 ──
 const helpStyles = {
   body: { padding: "16px 22px 8px" },
-  p: { margin: "0 0 14px", fontSize: 14, lineHeight: 1.65, color: "#3a3358" },
-  sec: { fontSize: 12, fontWeight: 700, color: "#8a83a8", letterSpacing: "0.05em", textTransform: "uppercase", margin: "18px 0 8px" },
-  ul: { margin: "0 0 6px", padding: "0 0 0 2px", listStyle: "none" },
-  li: { fontSize: 14, lineHeight: 1.55, color: "#3a3358", marginBottom: 10, paddingLeft: 12, borderLeft: "3px solid rgba(33,28,61,0.25)" },
-  note: { margin: "16px 0 14px", fontSize: 12, lineHeight: 1.6, color: "#8a83a8" },
+  p: { margin: "0 0 14px", fontSize: 14, lineHeight: 1.65, color: "#3A4150" },
+  sec: { fontSize: 12, fontWeight: 800, color: SUB, letterSpacing: "0.04em", margin: "18px 0 8px" },
+  ul: { margin: "0 0 6px", padding: 0, listStyle: "none" },
+  li: { fontSize: 14, lineHeight: 1.55, color: "#3A4150", marginBottom: 10, paddingLeft: 12, borderLeft: "3px solid " + RED },
+  note: { margin: "16px 0 14px", fontSize: 12, lineHeight: 1.6, color: SUB },
   mailBtn: {
-    display: "block", textAlign: "center", padding: "12px", borderRadius: 14,
-    background: "rgba(33,28,61,0.88)", color: "#fff", fontSize: 14, fontWeight: 700,
+    display: "block", textAlign: "center", padding: "13px", borderRadius: 14,
+    background: RED, color: "#fff", fontSize: 14, fontWeight: 800,
     textDecoration: "none", marginBottom: 6,
   },
 };
