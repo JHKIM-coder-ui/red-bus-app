@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "충북혁도 빨간버스 시간표",
-        short_name: "빨간버스",
-        description: "충북혁신도시 순환버스(1000번/2000번) 출발·도착 시간표",
+        name: "충북혁도 버스 시간표",
+        short_name: "혁도버스",
+        description: "충북혁신도시 빨간버스·모두타유 등 버스 출발·도착 시간표",
         theme_color: "#e7d9ff",
         background_color: "#cfe2ff",
         display: "standalone",

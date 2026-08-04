@@ -21,6 +21,17 @@ const STOPS = {
     "우미린", "교육과정평가원", "선옥", "서전고", "센텀", "천년나무4단지",
     "리슈빌", "영무예다음3차", "소방병원", "충북혁신터미널(도착)"
   ],
+  // ── 셔클 자율주행셔틀 ──
+  "SHUCLE_A1": [ // 시계방향 (음성→진천 방면)
+    "한국소비자원", "한국석유관리원", "수소안전뮤지엄", "맹동혁신도시출장소",
+    "국민체육센터", "대하육교", "동일하이빌", "성하빌딩사거리", "영무예다음1차",
+    "덕산혁신도시출장소", "한국건설시험환경시험연구원", "정보통신산업진흥원"
+  ],
+  "SHUCLE_A2": [ // 반시계방향 (진천→음성 방면)
+    "정보통신산업진흥원", "한국건설시험환경연구원", "덕산혁신도시출장소", "아모리움내안애",
+    "우미린스테이", "동일하이빌", "대하육교", "국민체육센터", "맹동혁신도시출장소",
+    "수소안전뮤지엄", "한국석유관리원", "한국소비자원"
+  ],
 };
 
 // ── 시간표: 각 배열 = 한 회차, 정류장 순서대로 시각(문자열) ──
@@ -49,10 +60,47 @@ const SCHEDULE_2000 = [
   ["19:20","19:22","19:26","19:29","19:31","19:33","19:37","19:39","19:41","19:43","19:44","19:46","19:49","19:52","19:54","19:55","19:57","20:00","20:03","20:03"],
 ];
 
-const SCHEDULES = { "1000": SCHEDULE_1000, "2000": SCHEDULE_2000 };
+// 셔클 A1 (시계방향, 음성→진천 방면) — 12개 정류장 × 8회차
+const SCHEDULE_SHUCLE_A1 = [
+  ["9:30","9:32","9:36","9:38","9:41","9:43","9:46","9:47","9:48","9:50","9:54","9:55"],
+  ["10:25","10:27","10:31","10:33","10:36","10:38","10:41","10:42","10:43","10:45","10:49","10:50"],
+  ["11:20","11:22","11:26","11:28","11:31","11:33","11:36","11:37","11:38","11:40","11:44","11:45"],
+  ["13:00","13:02","13:06","13:08","13:11","13:13","13:16","13:17","13:18","13:20","13:24","13:25"],
+  ["13:55","13:57","14:01","14:03","14:06","14:08","14:11","14:12","14:13","14:15","14:19","14:20"],
+  ["14:50","14:52","14:56","14:58","15:01","15:03","15:06","15:07","15:08","15:10","15:14","15:15"],
+  ["15:45","15:47","15:51","15:53","15:56","15:58","16:01","16:02","16:03","16:05","16:09","16:10"],
+  ["16:40","16:42","16:46","16:48","16:51","16:53","16:56","16:57","16:58","17:00","17:04","17:05"],
+];
+
+// 셔클 A2 (반시계방향, 진천→음성 방면) — 12개 정류장 × 8회차
+const SCHEDULE_SHUCLE_A2 = [
+  ["9:30","9:32","9:35","9:37","9:41","9:43","9:45","9:47","9:49","9:52","9:55","9:58"],
+  ["10:25","10:27","10:30","10:32","10:36","10:38","10:40","10:42","10:44","10:47","10:50","10:53"],
+  ["11:20","11:22","11:25","11:27","11:31","11:33","11:35","11:37","11:39","11:42","11:45","11:48"],
+  ["13:00","13:02","13:05","13:07","13:11","13:13","13:15","13:17","13:19","13:22","13:25","13:28"],
+  ["13:55","13:57","14:00","14:02","14:06","14:08","14:10","14:12","14:14","14:17","14:20","14:23"],
+  ["14:50","14:52","14:55","14:57","15:01","15:03","15:05","15:07","15:09","15:12","15:15","15:18"],
+  ["15:45","15:47","15:50","15:52","15:56","15:58","16:00","16:02","16:04","16:07","16:10","16:13"],
+  ["16:40","16:42","16:45","16:47","16:51","16:53","16:55","16:57","16:59","17:02","17:05","17:08"],
+];
+
+const SCHEDULES = {
+  "1000": SCHEDULE_1000,
+  "2000": SCHEDULE_2000,
+  "SHUCLE_A1": SCHEDULE_SHUCLE_A1,
+  "SHUCLE_A2": SCHEDULE_SHUCLE_A2,
+};
 const LINE_META = {
   "1000": { label: "순환1번", num: "1000", color: "#E2483D" },
   "2000": { label: "순환2번", num: "2000", color: "#2F7D4F" },
+  "SHUCLE_A1": { label: "모두타유 시계방향", num: "모두타유", color: "#00B8C4" },
+  "SHUCLE_A2": { label: "모두타유 반시계", num: "모두타유", color: "#7B4DE3" },
+};
+
+// ── 버스 그룹(탭) 정의 ──
+const GROUPS = {
+  red: { label: "빨간버스", lines: ["1000", "2000"] },
+  shucle: { label: "모두타유", lines: ["SHUCLE_A1", "SHUCLE_A2"] },
 };
 
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
@@ -88,11 +136,21 @@ function AdBox() {
 }
 
 export default function App() {
+  const [tab, setTab] = useState("red"); // "red" | "shucle"
   const [origin, setOrigin] = useState("");
   const [dest, setDest] = useState("");
   const [afterH, setAfterH] = useState(""); // 시 (24시간)
   const [afterM, setAfterM] = useState(""); // 분
   const [selected, setSelected] = useState(null); // 상세 뷰용 선택 결과
+
+  // 현재 탭의 노선들
+  const tabLines = GROUPS[tab].lines;
+
+  // 탭 변경 시 검색값 초기화
+  const changeTab = (t) => {
+    setTab(t);
+    setOrigin(""); setDest(""); setAfterH(""); setAfterM(""); setSelected(null);
+  };
 
   // 시각 필터 값 (시만 선택해도 동작, 둘 다 비면 필터 없음)
   const after = afterH === "" ? "" : `${afterH}:${afterM === "" ? "00" : afterM}`;
@@ -103,30 +161,32 @@ export default function App() {
     setAfterM(String(d.getMinutes()).padStart(2, "0"));
   };
 
-  // 출발지 후보: 두 노선의 모든 정류장 합집합 (도착 표시 제외)
+  // 출발지 후보: 현재 탭 노선의 모든 정류장 합집합 (도착 표시 제외)
   const allOrigins = useMemo(() => {
     const s = new Set();
-    Object.values(STOPS).forEach((arr) => arr.slice(0, -1).forEach((x) => s.add(x)));
+    tabLines.forEach((line) => STOPS[line].slice(0, -1).forEach((x) => s.add(x.replace("(도착)", ""))));
     return [...s];
-  }, []);
+  }, [tabLines]);
 
-  // 선택한 출발지에서 갈 수 있는 도착지 후보
+  // 선택한 출발지에서 갈 수 있는 도착지 후보 (현재 탭 노선 기준)
   const destOptions = useMemo(() => {
     if (!origin) return [];
     const s = new Set();
-    Object.entries(STOPS).forEach(([line, stops]) => {
+    tabLines.forEach((line) => {
+      const stops = STOPS[line];
       const oi = stops.indexOf(origin);
       if (oi >= 0) stops.slice(oi + 1).forEach((x) => s.add(x.replace("(도착)", "")));
     });
     return [...s];
-  }, [origin]);
+  }, [origin, tabLines]);
 
   const ready = origin && dest && afterH !== "";
 
   const results = useMemo(() => {
     if (!ready) return [];
     const out = [];
-    Object.entries(SCHEDULES).forEach(([line, sched]) => {
+    tabLines.forEach((line) => {
+      const sched = SCHEDULES[line];
       const stops = STOPS[line];
       const oi = stops.indexOf(origin);
       if (oi < 0) return;
@@ -153,7 +213,7 @@ export default function App() {
       });
     });
     return out.sort((a, b) => a.depMin - b.depMin);
-  }, [ready, origin, dest, after]);
+  }, [ready, origin, dest, after, tabLines]);
 
   const S = styles;
   return (
@@ -163,9 +223,21 @@ export default function App() {
       <div style={S.blobC} />
       <div className="card" style={S.card}>
         <header style={S.header}>
-          <h1 style={S.title}>충북혁도 빨간버스 시간표</h1>
-          <p style={S.sub}>1000번 / 2000번</p>
+          <h1 style={S.title}>충북혁도 버스 시간표</h1>
+          <p style={S.sub}>{tab === "red" ? "빨간버스 1000번 / 2000번" : "자율주행셔틀 모두타유"}</p>
         </header>
+
+        <div style={S.tabs}>
+          {Object.entries(GROUPS).map(([key, g]) => (
+            <button
+              key={key}
+              onClick={() => changeTab(key)}
+              style={{ ...S.tab, ...(tab === key ? S.tabActive : {}) }}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
 
         <div style={S.form}>
           <label style={S.field}>
@@ -223,7 +295,7 @@ export default function App() {
               <div key={i} style={S.row} onClick={() => setSelected(r)} role="button" tabIndex={0}>
                 <div style={S.rowLeft}>
                   <span style={{ ...S.dot, background: m.color }} />
-                  <span style={S.rowNum}>{m.num}번</span>
+                  <span style={S.rowNum}>{m.num === "모두타유" ? m.num : `${m.num}번`}</span>
                 </div>
                 <div style={S.rowMain}>
                   <div style={S.timeLine}>
@@ -242,7 +314,7 @@ export default function App() {
         <AdBox />
 
         <footer style={S.foot}>
-          빨간(하행) 시간표 기준 · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
+          {tab === "red" ? "빨간버스 시간표 기준" : "모두타유 자율주행셔틀 시간표 기준"} · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
         </footer>
       </div>
 
@@ -267,7 +339,7 @@ function DetailView({ result, onClose }) {
         <div style={D.head}>
           <div style={D.headLeft}>
             <span style={{ ...D.dot, background: m.color }} />
-            <span style={D.headNum}>{m.num}번</span>
+            <span style={D.headNum}>{m.num === "모두타유" ? m.label : `${m.num}번`}</span>
             <span style={D.headTime}>{result.dep} 출발</span>
           </div>
           <button style={D.close} onClick={onClose} aria-label="닫기">✕</button>
@@ -328,9 +400,20 @@ const styles = {
     boxShadow: "0 12px 40px rgba(70,60,130,0.18), inset 0 1px 0 rgba(255,255,255,0.7)",
     overflow: "hidden",
   },
-  header: { padding: "32px 26px 22px" },
+  header: { padding: "32px 26px 16px" },
   title: { margin: 0, fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "#211c3d" },
   sub: { margin: "8px 0 0", fontSize: 13, color: "#4a4370", fontWeight: 600, letterSpacing: "0.02em" },
+  tabs: {
+    display: "flex", gap: 6, padding: "0 26px 6px",
+  },
+  tab: {
+    flex: 1, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer",
+    borderRadius: 12, border: "1px solid rgba(255,255,255,0.5)",
+    background: "rgba(255,255,255,0.3)", color: "#5c5480",
+  },
+  tabActive: {
+    background: "rgba(33,28,61,0.88)", color: "#fff", border: "1px solid rgba(33,28,61,0.5)",
+  },
   form: { padding: "0 26px", display: "flex", flexDirection: "column" },
   field: { display: "flex", flexDirection: "column", gap: 8, padding: "18px 0", borderTop: "1px solid rgba(255,255,255,0.45)" },
   lbl: { fontSize: 12, fontWeight: 600, color: "#5c5480", letterSpacing: "0.06em", textTransform: "uppercase" },
