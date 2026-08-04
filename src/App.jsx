@@ -207,6 +207,7 @@ export default function App() {
   const [afterH, setAfterH] = useState(""); // 시 (24시간)
   const [afterM, setAfterM] = useState(""); // 분
   const [selected, setSelected] = useState(null); // 상세 뷰용 선택 결과
+  const [showHelp, setShowHelp] = useState(false); // 앱 안내 모달
 
   const group = GROUPS[tab];
   const isDestMode = group.type === "dest"; // 시외/시내버스 방식
@@ -333,7 +334,10 @@ export default function App() {
       <div style={S.blobC} />
       <div className="card" style={S.card}>
         <header style={S.header}>
-          <h1 style={S.title}>충북혁도 버스 시간표</h1>
+          <div style={S.titleRow}>
+            <h1 style={S.title}>충북혁도 버스 시간표</h1>
+            <button style={S.helpBtn} onClick={() => setShowHelp(true)} aria-label="앱 안내">?</button>
+          </div>
           <p style={S.sub}>{
             tab === "red" ? "빨간버스 1000번 / 2000번"
             : tab === "shucle" ? "자율주행셔틀 모두타유"
@@ -477,12 +481,56 @@ export default function App() {
             : tab === "intercity" ? "혁신도시터미널 시외버스 출발 기준"
             : "혁신도시터미널 시내버스 출발 기준"
           } · 실제 운행은 도로 상황에 따라 달라질 수 있습니다
+          <br />
+          문의: <a href="mailto:redbus.help@gmail.com" style={S.mail}>JH K (redbus.help@gmail.com)</a>
         </footer>
       </div>
 
       {selected && (
         <DetailView result={selected} onClose={() => setSelected(null)} />
       )}
+      {showHelp && <HelpView onClose={() => setShowHelp(false)} />}
+    </div>
+  );
+}
+
+// ── 앱 안내 뷰 ─────────────────────────────
+function HelpView({ onClose }) {
+  const D = detailStyles;
+  return (
+    <div style={D.overlay} onClick={onClose}>
+      <div style={D.sheet} onClick={(e) => e.stopPropagation()}>
+        <div style={D.grabber} />
+        <div style={D.head}>
+          <div style={D.headLeft}>
+            <span style={D.headNum}>이 앱은</span>
+          </div>
+          <button style={D.close} onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+        <div style={helpStyles.body}>
+          <p style={helpStyles.p}>
+            <b>충북혁신도시</b>를 오가는 여러 버스의 출발·도착 시각을 한 곳에서 찾아보는 앱입니다.
+            출발지·도착지·시간을 고르면 언제 어디서 어떤 버스를 타야 하는지 알려줍니다.
+          </p>
+          <div style={helpStyles.sec}>지금 담긴 버스</div>
+          <ul style={helpStyles.ul}>
+            <li style={helpStyles.li}><b>빨간버스</b> — 혁신도시 순환버스(1000·2000번). 출발·도착 정류장으로 조회</li>
+            <li style={helpStyles.li}><b>모두타유</b> — 자율주행셔틀. 시계·반시계 방향 순환</li>
+            <li style={helpStyles.li}><b>시외버스</b> — 혁신도시터미널에서 서울·대전·청주 등으로 가는 버스. 직통·경유·요일 운행 구분 표시</li>
+          </ul>
+          <div style={helpStyles.sec}>앞으로</div>
+          <p style={helpStyles.p}>
+            시내버스를 비롯해 혁신도시를 지나는 <b>모든 버스 정보를 하나씩 추가</b>할 예정입니다.
+            정보가 다 모이면, 내 위치와 시간대를 기준으로 <b>여러 버스를 한 번에 비교</b>해
+            가장 빠른 편을 골라주는 기능을 목표로 하고 있습니다.
+          </p>
+          <p style={helpStyles.note}>
+            시각은 예정 시각이며 실제 운행은 도로 상황에 따라 달라질 수 있습니다.
+            잘못된 정보나 제안은 아래 문의 이메일로 알려주세요.
+          </p>
+          <a href="mailto:redbus.help@gmail.com" style={helpStyles.mailBtn}>문의: redbus.help@gmail.com</a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -563,7 +611,13 @@ const styles = {
     overflow: "hidden",
   },
   header: { padding: "32px 26px 16px" },
+  titleRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
   title: { margin: 0, fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "#211c3d" },
+  helpBtn: {
+    flexShrink: 0, width: 30, height: 30, borderRadius: "50%",
+    border: "1px solid rgba(40,32,80,0.2)", background: "rgba(255,255,255,0.5)",
+    color: "#5c5480", fontSize: 16, fontWeight: 700, cursor: "pointer", lineHeight: 1,
+  },
   sub: { margin: "8px 0 0", fontSize: 13, color: "#4a4370", fontWeight: 600, letterSpacing: "0.02em" },
   tabs: {
     display: "flex", gap: 6, padding: "0 26px 6px",
@@ -635,7 +689,8 @@ const styles = {
   arr: { fontSize: 22, fontWeight: 700, color: "#413a63", letterSpacing: "-0.01em" },
   stops: { fontSize: 13, color: "#5c5480", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   chevron: { fontSize: 22, color: "#b7b0cf", fontWeight: 400, flexShrink: 0, marginLeft: 2 },
-  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.6 },
+  foot: { padding: "22px 26px 34px", fontSize: 11, color: "#7b749c", lineHeight: 1.8 },
+  mail: { color: "#4a4370", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(74,67,112,0.35)" },
 };
 
 // ── 상세 뷰 스타일 ─────────────────────────────
@@ -670,4 +725,19 @@ const detailStyles = {
   stopNameActive: { color: "#211c3d", fontWeight: 700 },
   tag: { fontSize: 11, fontWeight: 700, color: "#fff", padding: "2px 8px", borderRadius: 999, flexShrink: 0 },
   foot: { padding: "8px 22px 0", fontSize: 11, color: "#9a93b8", lineHeight: 1.5 },
+};
+
+// ── 앱 안내 스타일 ─────────────────────────────
+const helpStyles = {
+  body: { padding: "16px 22px 8px" },
+  p: { margin: "0 0 14px", fontSize: 14, lineHeight: 1.65, color: "#3a3358" },
+  sec: { fontSize: 12, fontWeight: 700, color: "#8a83a8", letterSpacing: "0.05em", textTransform: "uppercase", margin: "18px 0 8px" },
+  ul: { margin: "0 0 6px", padding: "0 0 0 2px", listStyle: "none" },
+  li: { fontSize: 14, lineHeight: 1.55, color: "#3a3358", marginBottom: 10, paddingLeft: 12, borderLeft: "3px solid rgba(33,28,61,0.25)" },
+  note: { margin: "16px 0 14px", fontSize: 12, lineHeight: 1.6, color: "#8a83a8" },
+  mailBtn: {
+    display: "block", textAlign: "center", padding: "12px", borderRadius: 14,
+    background: "rgba(33,28,61,0.88)", color: "#fff", fontSize: 14, fontWeight: 700,
+    textDecoration: "none", marginBottom: 6,
+  },
 };
