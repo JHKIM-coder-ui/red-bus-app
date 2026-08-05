@@ -106,44 +106,47 @@ const GROUPS = {
 };
 
 // ── 시외버스: 충북혁신도시터미널 출발 ──
-// 각 편: { t: 시각, via: 경유표기(없으면 직통), days: 운행요일(생략 시 매일) }
+// 각 편: { t: 시각, via: 경유표기(없으면 직통), days: 운행요일(생략 시 매일), grade: "우등"|"일반"(생략 시 미표시) }
 // days 코드: 0=일 1=월 2=화 3=수 4=목 5=금 6=토
 const INTERCITY = {
+  // 서울남부행: 실제 배차 기준 (우등 11,800원 / 일반 9,100원, 경유편은 대소 등 경유)
   "서울남부": [
-    { t: "6:20" }, { t: "7:00" }, { t: "7:40" }, { t: "8:20", via: "대소" },
-    { t: "9:00", via: "대소" }, { t: "9:10", via: "대소", days: [5,6,0] }, { t: "9:30" },
-    { t: "9:40", via: "대소", days: [6] }, { t: "10:00", via: "대소" },
-    { t: "10:20", via: "대소", days: [6] }, { t: "10:30" }, { t: "10:50", via: "대소", days: [6] },
-    { t: "11:00", via: "대소" }, { t: "11:20", via: "대소", days: [6] }, { t: "12:00", via: "대소" },
-    { t: "12:30" }, { t: "13:00", via: "대소" }, { t: "14:00", via: "대소" }, { t: "14:30" },
-    { t: "15:00", via: "대소" }, { t: "15:40", via: "대소", days: [5,6,0] }, { t: "16:00", via: "대소·죽전" },
-    { t: "16:20", via: "대소", days: [6] }, { t: "16:30" }, { t: "17:00", via: "대소" },
-    { t: "17:30" }, { t: "17:50", via: "대소", days: [6] }, { t: "18:00", via: "대소·죽전" },
-    { t: "18:30" }, { t: "19:00", via: "대소" }, { t: "20:00" }, { t: "21:00" },
+    { t: "6:20", grade: "우등" }, { t: "7:00", grade: "우등" }, { t: "7:40", grade: "우등" },
+    { t: "8:20", grade: "일반", via: "경유" }, { t: "9:00", grade: "우등", via: "경유" },
+    { t: "9:30", grade: "우등" }, { t: "10:00", grade: "우등", via: "경유" }, { t: "10:30", grade: "우등" },
+    { t: "10:50", grade: "일반", via: "경유" }, { t: "11:00", grade: "우등", via: "경유" },
+    { t: "12:00", grade: "우등", via: "경유" }, { t: "12:30", grade: "우등" },
+    { t: "13:00", grade: "우등", via: "경유" }, { t: "14:00", grade: "우등", via: "경유" },
+    { t: "14:30", grade: "우등" }, { t: "15:00", grade: "우등", via: "경유" },
+    { t: "15:40", grade: "일반", via: "경유" }, { t: "16:00", grade: "우등", via: "경유" },
+    { t: "16:30", grade: "우등" }, { t: "17:00", grade: "우등", via: "경유" }, { t: "17:30", grade: "우등" },
+    { t: "18:00", grade: "우등", via: "경유" }, { t: "18:20", grade: "일반", via: "경유" },
+    { t: "18:30", grade: "우등" }, { t: "19:00", grade: "우등", via: "경유" },
+    { t: "20:00", grade: "우등" }, { t: "21:00", grade: "우등" },
   ],
-  "동서울 (덕산·대소 경유)": [
+  "동서울": [
     { t: "7:35", via: "덕산·대소" }, { t: "10:05", via: "덕산·대소" }, { t: "12:35", via: "덕산·대소" },
     { t: "16:05", via: "덕산·대소" }, { t: "18:35", via: "덕산·대소" },
   ],
-  "수원·안산 (대소 경유)": [
-    { t: "7:55", via: "대소·로데오" }, { t: "14:55", via: "대소·공포" },
+  "수원·안산": [
+    { t: "7:55", via: "대소" }, { t: "14:55", via: "대소" },
   ],
   "김포·인천공항": [
     { t: "8:20" }, { t: "13:30" }, { t: "19:00" },
   ],
-  "대전복합 (진천 경유)": [
+  "대전복합": [
     { t: "7:10" }, { t: "9:00" }, { t: "11:00" }, { t: "13:00" }, { t: "15:00" }, { t: "17:00" }, { t: "19:00" },
   ],
   "유성": [
     { t: "6:40" }, { t: "9:30" }, { t: "12:50" }, { t: "13:50" }, { t: "16:00" }, { t: "17:50" }, { t: "18:50" }, { t: "21:00" },
   ],
-  "청주 (진천 경유)": [
+  "청주": [
     { t: "9:15" }, { t: "13:20" }, { t: "19:20" },
   ],
-  "충주 (무극·음성·주덕 경유)": [
+  "충주": [
     { t: "8:20" }, { t: "11:27" }, { t: "16:52" }, { t: "18:55" }, { t: "20:00", via: "음성종착" },
   ],
-  "천안 (진천 경유)": [
+  "천안": [
     { t: "7:20" }, { t: "9:40" }, { t: "11:20" }, { t: "13:30" }, { t: "18:30" },
   ],
   "오송": [
@@ -171,9 +174,8 @@ const DAY_NAMES = ["일","월","화","수","목","금","토"];
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 
 // ── 애드센스 광고 컴포넌트 ─────────────────────────────
-// client: 본인 게시자 ID (ca-pub-...), slot: 광고 단위 슬롯 ID
-const ADS_CLIENT = "ca-pub-6686343538244363"; // ← 본인 게시자 ID로 교체
-const ADS_SLOT = "XXXXXXXXXX";                // ← 광고 단위 슬롯 ID로 교체
+const ADS_CLIENT = "ca-pub-6686343538244363";
+const ADS_SLOT = "XXXXXXXXXX"; // ← 광고 단위 슬롯 ID로 교체
 
 function AdBox() {
   const ref = useRef(null);
@@ -200,6 +202,80 @@ function AdBox() {
   );
 }
 
+// ── 커스텀 드롭다운 (아이폰·갤럭시 동일 동작) ─────────────
+function Dropdown({ value, onChange, options, placeholder = "정류장 선택", disabled = false, accent = "#211c3d" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("touchstart", onDoc);
+    };
+  }, [open]);
+  const DD = ddStyles;
+  return (
+    <div style={DD.wrap} ref={ref}>
+      <button
+        type="button"
+        style={{ ...DD.trigger, ...(disabled ? DD.triggerDisabled : {}), ...(open ? { borderColor: accent } : {}) }}
+        onClick={() => !disabled && setOpen((v) => !v)}
+        disabled={disabled}
+      >
+        <span style={value ? DD.valText : DD.placeholder}>{value || placeholder}</span>
+        <span style={{ ...DD.caret, ...(open ? { transform: "rotate(180deg)" } : {}) }}>▾</span>
+      </button>
+      {open && (
+        <div style={DD.menu}>
+          {options.length === 0 && <div style={DD.emptyItem}>선택 가능한 정류장이 없습니다</div>}
+          {options.map((opt) => (
+            <button
+              type="button"
+              key={opt}
+              style={{ ...DD.item, ...(opt === value ? { ...DD.itemActive, color: accent } : {}) }}
+              onClick={() => { onChange(opt); setOpen(false); }}
+            >
+              {opt}
+              {opt === value && <span style={{ color: accent }}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ddStyles = {
+  wrap: { position: "relative", width: "100%" },
+  trigger: {
+    width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "12px 14px", fontSize: 16, fontWeight: 600, color: "#1F2430",
+    border: "1px solid #EEF0F4", borderRadius: 14,
+    background: "#FAFBFC", cursor: "pointer", textAlign: "left",
+  },
+  triggerDisabled: { opacity: 0.5, cursor: "not-allowed" },
+  valText: { color: "#1F2430", fontWeight: 600 },
+  placeholder: { color: "#B4B9C4", fontWeight: 500 },
+  caret: { fontSize: 12, color: "#8A90A0", marginLeft: 8, transition: "transform .15s", flexShrink: 0 },
+  menu: {
+    position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 50,
+    maxHeight: 260, overflowY: "auto",
+    background: "#fff", borderRadius: 14,
+    border: "1px solid #EEF0F4", boxShadow: "0 10px 30px rgba(20,25,40,0.16)",
+    padding: 6,
+  },
+  item: {
+    width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "12px 12px", fontSize: 15, color: "#3A4150", fontWeight: 500,
+    border: "none", background: "transparent", borderRadius: 10, cursor: "pointer", textAlign: "left",
+  },
+  itemActive: { background: "#F1F3F7", fontWeight: 700 },
+  emptyItem: { padding: "14px 12px", fontSize: 14, color: "#B4B9C4", textAlign: "center" },
+};
+
 export default function App() {
   const [tab, setTab] = useState("red");
   const [origin, setOrigin] = useState("");
@@ -211,19 +287,16 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false); // 앱 안내 모달
 
   const group = GROUPS[tab];
-  const accent = group.color || "#E23B32"; // 현재 탭 대표색
+  const accent = group.color || "#E23B32";
   const accentSoft = group.soft || "#FDECEA";
-  const isDestMode = group.type === "dest"; // 시외/시내버스 방식
-  // 현재 탭의 노선들 (순환 방식일 때만)
+  const isDestMode = group.type === "dest";
   const tabLines = group.lines || [];
 
-  // 탭 변경 시 검색값 초기화
   const changeTab = (t) => {
     setTab(t);
     setOrigin(""); setDest(""); setDestName(""); setAfterH(""); setAfterM(""); setSelected(null);
   };
 
-  // 시각 필터 값 (시만 선택해도 동작, 둘 다 비면 필터 없음)
   const after = afterH === "" ? "" : `${afterH}:${afterM === "" ? "00" : afterM}`;
 
   const setNow = () => {
@@ -232,14 +305,12 @@ export default function App() {
     setAfterM(String(d.getMinutes()).padStart(2, "0"));
   };
 
-  // 출발지 후보: 현재 탭 노선의 모든 정류장 합집합 (도착 표시 제외)
   const allOrigins = useMemo(() => {
     const s = new Set();
     tabLines.forEach((line) => STOPS[line].slice(0, -1).forEach((x) => s.add(x.replace("(도착)", ""))));
     return [...s];
   }, [tabLines]);
 
-  // 선택한 출발지에서 갈 수 있는 도착지 후보 (현재 탭 노선 기준)
   const destOptions = useMemo(() => {
     if (!origin) return [];
     const s = new Set();
@@ -261,21 +332,17 @@ export default function App() {
       const stops = STOPS[line];
       const oi = stops.indexOf(origin);
       if (oi < 0) return;
-      // 도착지 인덱스 (선택 시). 출발지 이후여야 함
       let di = -1;
       if (dest) {
         di = stops.findIndex((s, i) => i > oi && s.replace("(도착)", "") === dest);
-        if (di < 0) return; // 이 노선으론 못 감
+        if (di < 0) return;
       }
       sched.forEach((row, rowIdx) => {
         const depT = row[oi];
         if (!depT) return;
         if (after && toMin(depT) < toMin(after)) return;
         out.push({
-          line,
-          rowIdx,
-          oi,
-          di,
+          line, rowIdx, oi, di,
           dep: depT,
           depMin: toMin(depT),
           arr: di >= 0 ? row[di] : null,
@@ -286,19 +353,14 @@ export default function App() {
     return out.sort((a, b) => a.depMin - b.depMin);
   }, [ready, origin, dest, after, tabLines]);
 
-  // ── 시외/시내버스(목적지 방식) ──
   const destList = useMemo(() => {
     if (!isDestMode) return [];
     return Object.keys(DEST_DATA[tab]);
   }, [isDestMode, tab]);
 
-  // 오늘 요일 (0=일 ~ 6=토)
   const todayDow = new Date().getDay();
-
-  // 조회 조건: 시간대 선택 시 활성 (목적지는 선택사항)
   const destReady = isDestMode && afterH !== "";
 
-  // 모든 목적지의 출발 편을 시간순으로 합쳐 반환. 목적지 선택 시 그 목적지만.
   const destResults = useMemo(() => {
     if (!destReady) return [];
     const data = DEST_DATA[tab];
@@ -306,23 +368,15 @@ export default function App() {
     const out = [];
     targets.forEach((d) => {
       (data[d] || []).forEach((item) => {
-        // 시외버스는 객체({t,via,days}), 시내버스는 문자열
         const t = typeof item === "string" ? item : item.t;
         const via = typeof item === "string" ? null : (item.via || null);
         const days = typeof item === "string" ? null : (item.days || null);
+        const grade = typeof item === "string" ? null : (item.grade || null);
         if (after && toMin(t) < toMin(after)) return;
         const runsToday = !days || days.includes(todayDow);
-        out.push({
-          dest: d,
-          t,
-          min: toMin(t),
-          via,
-          days,
-          runsToday,
-        });
+        out.push({ dest: d, t, min: toMin(t), via, days, grade, runsToday });
       });
     });
-    // 오늘 운행 편을 먼저, 그 안에서 시간순
     return out.sort((a, b) => {
       if (a.runsToday !== b.runsToday) return a.runsToday ? -1 : 1;
       return a.min - b.min;
@@ -373,18 +427,11 @@ export default function App() {
             <>
               <label style={S.field}>
                 <span style={S.lbl}>출발</span>
-                <select style={S.input} value={origin} onChange={(e) => { setOrigin(e.target.value); setDest(""); }}>
-                  <option value="">정류장 선택</option>
-                  {allOrigins.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Dropdown value={origin} onChange={(v) => { setOrigin(v); setDest(""); }} options={allOrigins} accent={accent} />
               </label>
-
               <label style={S.field}>
                 <span style={S.lbl}>도착</span>
-                <select style={S.input} value={dest} onChange={(e) => setDest(e.target.value)} disabled={!origin}>
-                  <option value="">정류장 선택</option>
-                  {destOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Dropdown value={dest} onChange={(v) => setDest(v)} options={destOptions} disabled={!origin} accent={accent} />
               </label>
             </>
           )}
@@ -392,10 +439,7 @@ export default function App() {
           {isDestMode && (
             <label style={S.field}>
               <span style={S.lbl}>도착</span>
-              <select style={S.input} value={destName} onChange={(e) => setDestName(e.target.value)}>
-                <option value="">정류장 선택</option>
-                {destList.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
+              <Dropdown value={destName} onChange={(v) => setDestName(v)} options={destList} accent={accent} />
             </label>
           )}
 
@@ -431,7 +475,6 @@ export default function App() {
         </div>
 
         <div style={{ ...S.list, ...(hasResults ? {} : S.listEmpty) }}>
-          {/* 순환 방식(빨간버스·모두타유) 결과 */}
           {!isDestMode && ready && results.length === 0 && (
             <div style={S.empty}>선택한 시간 이후 버스편이 없습니다</div>
           )}
@@ -456,7 +499,6 @@ export default function App() {
             );
           })}
 
-          {/* 목적지 방식(시외·시내버스) 편별 목록 */}
           {isDestMode && destReady && destResults.length === 0 && (
             <div style={S.empty}>선택한 시간 이후 버스편이 없습니다</div>
           )}
@@ -468,8 +510,13 @@ export default function App() {
               <div style={S.rowMain}>
                 <div style={S.busDest}>{r.dest}</div>
                 <div style={S.busTags}>
+                  {r.grade && (
+                    <span style={{ ...S.gradeTag, ...(r.grade === "우등" ? S.gradePremium : S.gradeNormal) }}>
+                      {r.grade}
+                    </span>
+                  )}
                   <span style={{ ...S.viaTag, ...(r.via ? S.viaCol : S.directCol) }}>
-                    {r.via ? `${r.via} 경유` : "직통"}
+                    {r.via ? (r.via === "경유" ? "경유" : `${r.via} 경유`) : "직통"}
                   </span>
                   {r.days && (
                     <span style={{ ...S.dayTag, ...(r.runsToday ? S.dayRun : S.dayNo) }}>
@@ -482,7 +529,7 @@ export default function App() {
           ))}
         </div>
 
-        <AdBox />
+        {hasResults && <AdBox />}
 
         <footer style={S.foot}>
           실제운행은 도로 사정에 따라 달라질 수 있음.
@@ -521,7 +568,7 @@ function HelpView({ onClose }) {
           <ul style={helpStyles.ul}>
             <li style={helpStyles.li}><b>빨간버스</b> — 혁신도시 순환버스(1000·2000번). 출발·도착 정류장으로 조회</li>
             <li style={helpStyles.li}><b>모두타유</b> — 자율주행셔틀. 시계·반시계 방향 순환</li>
-            <li style={helpStyles.li}><b>시외버스</b> — 혁신도시터미널에서 서울·대전·청주 등으로 가는 버스. 직통·경유·요일 운행 구분 표시</li>
+            <li style={helpStyles.li}><b>시외버스</b> — 혁신도시터미널에서 서울·대전·청주 등으로 가는 버스. 우등·일반, 직통·경유, 요일 운행 구분 표시</li>
           </ul>
           <div style={helpStyles.sec}>앞으로</div>
           <p style={helpStyles.p}>
@@ -653,7 +700,7 @@ const styles = {
   resultHead: { padding: "18px 22px 8px", fontSize: 12, fontWeight: 700, color: SUB, letterSpacing: "0.04em" },
   resultHeadEmpty: { padding: "4px 22px 0", height: 0, overflow: "hidden" },
   list: { display: "flex", flexDirection: "column", gap: 10, padding: "0 16px 8px", maxHeight: "min(52vh, 520px)", overflowY: "auto" },
-  listEmpty: { maxHeight: "none", padding: "0 16px" },
+  listEmpty: { maxHeight: "none", padding: 0, minHeight: 0 },
   empty: { padding: "36px 22px", textAlign: "center", color: "#B4B9C4", fontSize: 14 },
 
   row: {
@@ -679,11 +726,14 @@ const styles = {
   viaTag: { fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 },
   directCol: { background: "#E7F6EE", color: "#188A56" },
   viaCol: { background: "#EAF0FF", color: "#3A5BD0" },
+  gradeTag: { fontSize: 12, fontWeight: 800, padding: "2px 9px", borderRadius: 999 },
+  gradePremium: { background: "#2b2350", color: "#fff" },
+  gradeNormal: { background: "#efe9e0", color: "#7a6f52" },
   dayTag: { fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999 },
   dayRun: { background: "#F1F3F7", color: SUB },
   dayNo: { background: RED_SOFT, color: RED },
 
-  foot: { padding: "14px 22px 20px", fontSize: 11, color: "#A6ABB8", lineHeight: 1.8, background: "#fff" },
+  foot: { padding: "18px 22px 20px", fontSize: 11, color: "#A6ABB8", lineHeight: 1.8, background: "#fff" },
   mail: { color: RED, fontWeight: 700, textDecoration: "none", borderBottom: "1px solid " + RED_SOFT },
 };
 
