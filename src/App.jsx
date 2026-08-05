@@ -540,7 +540,7 @@ export default function App() {
         <footer style={S.foot}>
           실제운행은 도로 사정에 따라 달라질 수 있음.
           <br />
-          문의: <a href="mailto:redbus.help@gmail.com" style={{ ...S.mail, color: accent, borderColor: accentSoft }}>JH K (redbus.help@gmail.com)</a>
+          문의: <a href="mailto:redbus.help@gmail.com" style={{ ...S.mail, color: accent, borderColor: accentSoft }}>HK J (redbus.help@gmail.com)</a>
         </footer>
       </div>
 
