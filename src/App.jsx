@@ -206,16 +206,22 @@ function AdBox() {
 function Dropdown({ value, onChange, options, placeholder = "정류장 선택", disabled = false, accent = "#211c3d" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("touchstart", onDoc);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("touchstart", onDoc);
-    };
+    // pointerdown: 마우스·터치를 하나로 처리(아이폰·갤럭시 동일). 다음 틱 등록으로 여는 입력과의 충돌 방지.
+    const id = setTimeout(() => document.addEventListener("pointerdown", onDoc), 0);
+    return () => { clearTimeout(id); document.removeEventListener("pointerdown", onDoc); };
   }, [open]);
+
+  const handleSelect = (e, opt) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(false);
+    onChange(opt);
+  };
+
   const DD = ddStyles;
   return (
     <div style={DD.wrap} ref={ref}>
@@ -236,7 +242,7 @@ function Dropdown({ value, onChange, options, placeholder = "정류장 선택", 
               type="button"
               key={opt}
               style={{ ...DD.item, ...(opt === value ? { ...DD.itemActive, color: accent } : {}) }}
-              onClick={() => { onChange(opt); setOpen(false); }}
+              onPointerDown={(e) => handleSelect(e, opt)}
             >
               {opt}
               {opt === value && <span style={{ color: accent }}>✓</span>}
