@@ -206,18 +206,32 @@ function AdBox() {
 function Dropdown({ value, onChange, options, placeholder = "정류장 선택", disabled = false, accent = "#211c3d" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const touchStart = useRef(null); // 터치 시작 좌표 (스크롤/탭 구분용)
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    // pointerdown: 마우스·터치를 하나로 처리(아이폰·갤럭시 동일). 다음 틱 등록으로 여는 입력과의 충돌 방지.
     const id = setTimeout(() => document.addEventListener("pointerdown", onDoc), 0);
     return () => { clearTimeout(id); document.removeEventListener("pointerdown", onDoc); };
   }, [open]);
 
-  const handleSelect = (opt) => {
-    setOpen(false);
-    onChange(opt);
+  const select = (opt) => { setOpen(false); onChange(opt); };
+
+  // 터치: 시작점 기록 → 끝점과 거의 안 움직였으면 탭(선택), 움직였으면 스크롤로 간주해 무시
+  const onItemTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  };
+  const onItemTouchEnd = (e, opt) => {
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const dx = Math.abs(t.clientX - touchStart.current.x);
+    const dy = Math.abs(t.clientY - touchStart.current.y);
+    touchStart.current = null;
+    if (dx < 8 && dy < 8) { // 거의 안 움직임 = 탭
+      e.preventDefault();
+      select(opt);
+    }
   };
 
   const DD = ddStyles;
@@ -240,7 +254,9 @@ function Dropdown({ value, onChange, options, placeholder = "정류장 선택", 
               type="button"
               key={opt}
               style={{ ...DD.item, ...(opt === value ? { ...DD.itemActive, color: accent } : {}) }}
-              onClick={() => handleSelect(opt)}
+              onClick={() => select(opt)}
+              onTouchStart={onItemTouchStart}
+              onTouchEnd={(e) => onItemTouchEnd(e, opt)}
             >
               {opt}
               {opt === value && <span style={{ color: accent }}>✓</span>}
