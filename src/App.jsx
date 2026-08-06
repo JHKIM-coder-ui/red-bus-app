@@ -215,9 +215,7 @@ function Dropdown({ value, onChange, options, placeholder = "정류장 선택", 
     return () => { clearTimeout(id); document.removeEventListener("pointerdown", onDoc); };
   }, [open]);
 
-  const handleSelect = (e, opt) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleSelect = (opt) => {
     setOpen(false);
     onChange(opt);
   };
@@ -242,7 +240,7 @@ function Dropdown({ value, onChange, options, placeholder = "정류장 선택", 
               type="button"
               key={opt}
               style={{ ...DD.item, ...(opt === value ? { ...DD.itemActive, color: accent } : {}) }}
-              onPointerDown={(e) => handleSelect(e, opt)}
+              onClick={() => handleSelect(opt)}
             >
               {opt}
               {opt === value && <span style={{ color: accent }}>✓</span>}
@@ -268,7 +266,7 @@ const ddStyles = {
   caret: { fontSize: 12, color: "#8A90A0", marginLeft: 8, transition: "transform .15s", flexShrink: 0 },
   menu: {
     position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 50,
-    maxHeight: 260, overflowY: "auto",
+    maxHeight: 260, overflowY: "auto", WebkitOverflowScrolling: "touch", touchAction: "pan-y", overscrollBehavior: "contain",
     background: "#fff", borderRadius: 14,
     border: "1px solid #EEF0F4", boxShadow: "0 10px 30px rgba(20,25,40,0.16)",
     padding: 6,
