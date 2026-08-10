@@ -435,6 +435,7 @@ export default function App() {
   const [afterM, setAfterM] = useState(""); // 분
   const [selected, setSelected] = useState(null); // 상세 뷰용 선택 결과
   const [showHelp, setShowHelp] = useState(false); // 앱 안내 모달
+  const [showPrivacy, setShowPrivacy] = useState(false); // 개인정보처리방침 모달
 
   const group = GROUPS[tab];
   const accent = group.color || "#E23B32";
@@ -698,6 +699,8 @@ export default function App() {
           실제운행은 도로 사정에 따라 달라질 수 있음.
           <br />
           문의: <a href="mailto:redbus.help@gmail.com" style={{ ...S.mail, color: accent, borderColor: accentSoft }}>HK J (redbus.help@gmail.com)</a>
+          <br />
+          <button style={S.privacyLink} onClick={() => setShowPrivacy(true)}>개인정보처리방침</button>
         </footer>
       </div>
 
@@ -705,6 +708,7 @@ export default function App() {
         <DetailView result={selected} onClose={() => setSelected(null)} />
       )}
       {showHelp && <HelpView onClose={() => setShowHelp(false)} />}
+      {showPrivacy && <PrivacyView onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }
@@ -744,6 +748,74 @@ function HelpView({ onClose }) {
             잘못된 정보나 제안은 아래 문의 이메일로 알려주세요.
           </p>
           <a href="mailto:redbus.help@gmail.com" style={helpStyles.mailBtn}>문의: redbus.help@gmail.com</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 개인정보처리방침 뷰 ─────────────────────────────
+function PrivacyView({ onClose }) {
+  const D = detailStyles;
+  const P = helpStyles;
+  const today = "2026-08-10"; // 최종 개정일
+  return (
+    <div style={D.overlay} onClick={onClose}>
+      <div style={D.sheet} onClick={(e) => e.stopPropagation()}>
+        <div style={D.grabber} />
+        <div style={D.head}>
+          <div style={D.headLeft}>
+            <span style={D.headNum}>개인정보처리방침</span>
+          </div>
+          <button style={D.close} onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+        <div style={P.body}>
+          <p style={P.p}>
+            '충북혁도 버스 시간표'(이하 '본 서비스')는 이용자의 개인정보를 소중히 여기며,
+            아래와 같이 개인정보 처리 방침을 안내합니다.
+          </p>
+
+          <div style={P.sec}>1. 개인정보의 직접 수집</div>
+          <p style={P.p}>
+            본 서비스는 이용자의 이름, 연락처, 위치 등 개인을 식별할 수 있는 정보를
+            직접 수집하거나 서버에 저장하지 않습니다. 버스 시간 조회는 이용자의 기기에서만
+            처리되며 별도 회원가입이나 로그인이 없습니다.
+          </p>
+
+          <div style={P.sec}>2. 쿠키 및 자동 수집 정보</div>
+          <p style={P.p}>
+            본 서비스는 서비스 개선과 광고 게재를 위해 아래 외부 도구를 사용하며,
+            이 도구들이 쿠키 등을 통해 익명화된 이용 정보(방문 기록, 페이지 조회, 기기·브라우저 종류,
+            버튼 클릭 등)를 수집할 수 있습니다.
+          </p>
+          <ul style={P.ul}>
+            <li style={P.li}><b>Google AdSense</b> — 광고 게재. 쿠키를 이용해 관심 기반 광고를 제공할 수 있습니다.</li>
+            <li style={P.li}><b>Google Analytics</b> — 이용 통계 분석. 어떤 메뉴·정류장이 많이 이용되는지 등 익명 통계를 수집합니다.</li>
+          </ul>
+          <p style={P.p}>
+            이용자는 브라우저 설정에서 쿠키 저장을 거부하거나 삭제할 수 있으며,
+            Google 광고 설정(google.com/settings/ads)에서 맞춤 광고를 해제할 수 있습니다.
+          </p>
+
+          <div style={P.sec}>3. 외부 서비스 연결</div>
+          <p style={P.p}>
+            시외버스 예매 버튼은 외부 예매 사이트(버스타고, bustago.or.kr)로 연결됩니다.
+            연결된 외부 사이트의 개인정보 처리는 해당 사이트의 방침을 따릅니다.
+          </p>
+
+          <div style={P.sec}>4. 개인정보의 제3자 제공</div>
+          <p style={P.p}>
+            본 서비스는 이용자의 개인정보를 직접 수집하지 않으므로 제3자에게 제공하지 않습니다.
+            다만 위 외부 도구(Google 등)의 데이터 수집은 각 사업자의 방침에 따릅니다.
+          </p>
+
+          <div style={P.sec}>5. 문의</div>
+          <p style={P.p}>
+            개인정보 처리에 관한 문의는 아래 이메일로 연락해 주시기 바랍니다.
+          </p>
+          <a href="mailto:redbus.help@gmail.com" style={P.mailBtn}>redbus.help@gmail.com</a>
+
+          <p style={P.note}>최종 개정일: {today}</p>
         </div>
       </div>
     </div>
@@ -903,6 +975,7 @@ const styles = {
 
   foot: { padding: "18px 22px 20px", fontSize: 11, color: "#A6ABB8", lineHeight: 1.8, background: "#fff" },
   mail: { color: RED, fontWeight: 700, textDecoration: "none", borderBottom: "1px solid " + RED_SOFT },
+  privacyLink: { marginTop: 8, padding: 0, border: "none", background: "none", color: "#A6ABB8", fontSize: 11, textDecoration: "underline", cursor: "pointer" },
 };
 
 // ── 상세/안내 시트 스타일 ──
