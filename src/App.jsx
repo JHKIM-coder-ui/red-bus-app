@@ -288,6 +288,15 @@ const DAY_NAMES = ["일","월","화","수","목","금","토"];
 
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 
+// GA4 이벤트 전송 (측정 ID 미설정 시 자동 무시)
+const track = (name, params) => {
+  try {
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", name, params || {});
+    }
+  } catch (e) { /* 무시 */ }
+};
+
 // 버스타고 시외버스 웹 예매 페이지 열기 (앱 설치 불필요, 브라우저에서 바로 열림)
 const BUSTAGO_URL = "https://www.bustago.or.kr/newweb/kr/ticket/ticket.do";
 const openBooking = () => {
@@ -434,6 +443,7 @@ export default function App() {
   const tabLines = group.lines || [];
 
   const changeTab = (t) => {
+    track("tab_select", { tab: GROUPS[t]?.label || t });
     setTab(t);
     setOrigin(""); setDest(""); setDestName(""); setAfterH(""); setAfterM(""); setSelected(null);
   };
@@ -569,11 +579,11 @@ export default function App() {
             <>
               <label style={S.field}>
                 <span style={S.lbl}>출발</span>
-                <Dropdown value={origin} onChange={(v) => { setOrigin(v); setDest(""); }} options={allOrigins} accent={accent} />
+                <Dropdown value={origin} onChange={(v) => { track("origin_select", { tab: group.label, stop: v }); setOrigin(v); setDest(""); }} options={allOrigins} accent={accent} />
               </label>
               <label style={S.field}>
                 <span style={S.lbl}>도착</span>
-                <Dropdown value={dest} onChange={(v) => setDest(v)} options={destOptions} disabled={!origin} accent={accent} />
+                <Dropdown value={dest} onChange={(v) => { track("dest_select", { tab: group.label, stop: v }); setDest(v); }} options={destOptions} disabled={!origin} accent={accent} />
               </label>
             </>
           )}
@@ -581,7 +591,7 @@ export default function App() {
           {isDestMode && (
             <label style={S.field}>
               <span style={S.lbl}>도착</span>
-              <Dropdown value={destName} onChange={(v) => setDestName(v)} options={destList} accent={accent} />
+              <Dropdown value={destName} onChange={(v) => { track("dest_select", { tab: group.label, stop: v }); setDestName(v); }} options={destList} accent={accent} />
             </label>
           )}
 
@@ -673,7 +683,7 @@ export default function App() {
               {tab === "intercity" && (
                 <button
                   style={{ ...S.bookBtn, background: accent }}
-                  onClick={(e) => { e.stopPropagation(); openBooking(); }}
+                  onClick={(e) => { e.stopPropagation(); track("booking_click", { dest: r.dest, time: r.t }); openBooking(); }}
                 >
                   예매
                 </button>
