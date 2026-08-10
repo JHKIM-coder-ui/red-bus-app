@@ -288,6 +288,12 @@ const DAY_NAMES = ["일","월","화","수","목","금","토"];
 
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 
+// 버스타고 시외버스 웹 예매 페이지 열기 (앱 설치 불필요, 브라우저에서 바로 열림)
+const BUSTAGO_URL = "https://www.bustago.or.kr/newweb/kr/ticket/ticket.do";
+const openBooking = () => {
+  window.open(BUSTAGO_URL, "_blank", "noopener");
+};
+
 // ── 애드센스 광고 컴포넌트 ─────────────────────────────
 const ADS_CLIENT = "ca-pub-6686343538244363";
 const ADS_SLOT = "XXXXXXXXXX"; // ← 광고 단위 슬롯 ID로 교체
@@ -664,6 +670,14 @@ export default function App() {
                   )}
                 </div>
               </div>
+              {tab === "intercity" && (
+                <button
+                  style={{ ...S.bookBtn, background: accent }}
+                  onClick={(e) => { e.stopPropagation(); openBooking(); }}
+                >
+                  예매
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -861,6 +875,10 @@ const styles = {
 
   busTimeCol: { width: 58, flexShrink: 0, display: "flex", alignItems: "center" },
   busDest: { fontSize: 16, fontWeight: 800, color: INK, marginBottom: 5 },
+  bookBtn: {
+    flexShrink: 0, alignSelf: "center", padding: "9px 14px", fontSize: 13, fontWeight: 800,
+    color: "#fff", border: "none", borderRadius: 12, cursor: "pointer", whiteSpace: "nowrap",
+  },
   busTags: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
   viaTag: { fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 10, lineHeight: 1.4, whiteSpace: "normal", wordBreak: "keep-all" },
   directCol: { background: "#E7F6EE", color: "#188A56" },
