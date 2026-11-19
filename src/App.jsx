@@ -746,7 +746,7 @@ function GuideView({ onClose }) {
           <div style={G.updateBox}>
             <div style={G.updateTitle}>📢 최근 업데이트</div>
             <ul style={G.updateList}>
-              <li style={G.updateItem}><b>2026.08.18</b> — 모두타유(A1·A2) 시간표를 최신 공식 시간표로 업데이트했습니다.</li>
+              <li style={G.updateItem}><b>2026.11.19</b> — 모두타유(A1·A2) 시간표를 최신 공식 시간표로 업데이트했습니다.</li>
             </ul>
           </div>
 
