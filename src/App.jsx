@@ -743,6 +743,13 @@ function GuideView({ onClose }) {
             다양한 노선이 운행됩니다. 아래 안내를 참고해 목적에 맞는 버스를 선택하세요.
           </p>
 
+          <div style={G.updateBox}>
+            <div style={G.updateTitle}>📢 최근 업데이트</div>
+            <ul style={G.updateList}>
+              <li style={G.updateItem}><b>2026.08.18</b> — 모두타유(A1·A2) 시간표를 최신 공식 시간표로 업데이트했습니다.</li>
+            </ul>
+          </div>
+
           <div style={G.h}>1. 빨간버스 (순환 1000번 · 2000번)</div>
           <p style={G.p}>
             빨간버스는 충북혁신도시 내부를 도는 순환버스로, 도시 안에서 이동할 때
@@ -1156,6 +1163,10 @@ const helpStyles = {
 const guideStyles = {
   body: { padding: "16px 22px 8px" },
   intro: { margin: "0 0 8px", fontSize: 14, lineHeight: 1.75, color: "#2c3340", background: "#F7F8FA", padding: "14px 16px", borderRadius: 12 },
+  updateBox: { margin: "14px 0 8px", background: "#FFF7E6", border: "1px solid #F5D98B", borderRadius: 12, padding: "12px 16px" },
+  updateTitle: { fontSize: 13, fontWeight: 800, color: "#8A6D1A", marginBottom: 8 },
+  updateList: { margin: 0, padding: 0, listStyle: "none" },
+  updateItem: { fontSize: 13, lineHeight: 1.6, color: "#5c4a1a", marginBottom: 6 },
   h: { fontSize: 16, fontWeight: 800, color: INK, margin: "22px 0 10px", paddingLeft: 10, borderLeft: "4px solid " + RED },
   p: { margin: "0 0 12px", fontSize: 14, lineHeight: 1.75, color: "#3A4150" },
   ul: { margin: "0 0 6px", padding: 0, listStyle: "none" },
